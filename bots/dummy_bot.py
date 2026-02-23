@@ -12,6 +12,8 @@ async def play_dummy_powers(hostname='localhost', port=8432):
         constants.PRIVATE_BOT_PASSWORD
     )
 
+    active_games = {}
+
     dummy_powers = await channel.get_dummy_waiting_powers(buffer_size=100)
 
     if not dummy_powers:
@@ -24,7 +26,11 @@ async def play_dummy_powers(hostname='localhost', port=8432):
         print(f"\nGame: {game_id}")
 
         for power_name in power_names:
-            game = await channel.join_game(game_id=game_id, power_name=power_name)
+            key = (game_id, power_name)
+            game = active_games.get(key)
+            if game is None:
+                game = await channel.join_game(game_id=game_id, power_name=power_name)
+                active_games[key] = game
 
             orderable_locations = game.get_orderable_locations(power_name)
             if not orderable_locations:
