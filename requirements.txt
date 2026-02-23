@@ -1,5 +1,6 @@
 bcrypt
 coloredlogs
+crewai[tools]
 python-dateutil
 pytz
 tornado>=5.0

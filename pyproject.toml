@@ -5,6 +5,7 @@ requires-python = ">=3.12"
 dependencies = [
     "bcrypt>=5.0.0",
     "coloredlogs>=15.0.1",
+    "crewai[tools]",
     "dotenv>=0.9.9",
     "python-dateutil>=2.9.0.post0",
     "pytz>=2025.2",
