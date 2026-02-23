@@ -16,8 +16,19 @@ def _init_langfuse_tracing():
     """Enable CrewAI tracing to Langfuse when Langfuse env vars are configured."""
     public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
     secret_key = os.getenv("LANGFUSE_SECRET_KEY")
-    host = os.getenv("LANGFUSE_HOST")
-    if not (public_key and secret_key and host):
+    host = os.getenv("LANGFUSE_HOST") or os.getenv("LANGFUSE_BASE_URL")
+    missing = []
+    if not public_key:
+        missing.append("LANGFUSE_PUBLIC_KEY")
+    if not secret_key:
+        missing.append("LANGFUSE_SECRET_KEY")
+    if not host:
+        missing.append("LANGFUSE_HOST or LANGFUSE_BASE_URL")
+    if missing:
+        print(
+            "Langfuse tracing disabled: missing env var(s): "
+            + ", ".join(missing)
+        )
         return
 
     try:
@@ -29,9 +40,20 @@ def _init_langfuse_tracing():
         )
         return
 
+    host = host.rstrip("/")
+    if host.endswith("/api/public/otel"):
+        otlp_endpoint = host
+    else:
+        otlp_endpoint = f"{host}/api/public/otel"
+
+    # Diagnostic mode: export to Langfuse OTLP and local console spans.
+    os.environ.setdefault("OTEL_TRACES_EXPORTER", "otlp,console")
+    print(f"Langfuse tracing endpoint: {otlp_endpoint}")
+    print(f"OTEL_TRACES_EXPORTER={os.environ.get('OTEL_TRACES_EXPORTER')}")
+
     basic_auth = b64encode(f"{public_key}:{secret_key}".encode("utf-8")).decode("utf-8")
     openlit.init(
-        otlp_endpoint=f"{host.rstrip('/')}/api/public/otel",
+        otlp_endpoint=otlp_endpoint,
         otlp_headers={"Authorization": f"Basic {basic_auth}"},
     )
 
