@@ -1,5 +1,7 @@
 import asyncio
 import json
+import os
+from base64 import b64encode
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -8,6 +10,30 @@ from diplomacy.client.connection import connect
 from diplomacy.utils import constants
 
 from bots.crews.random_orders_crew import build_random_orders_crew
+
+
+def _init_langfuse_tracing():
+    """Enable CrewAI tracing to Langfuse when Langfuse env vars are configured."""
+    public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
+    secret_key = os.getenv("LANGFUSE_SECRET_KEY")
+    host = os.getenv("LANGFUSE_HOST")
+    if not (public_key and secret_key and host):
+        return
+
+    try:
+        import openlit
+    except ImportError:
+        print(
+            "Langfuse env vars detected, but `openlit` is not installed. "
+            "Run `uv sync` to install tracing dependencies."
+        )
+        return
+
+    basic_auth = b64encode(f"{public_key}:{secret_key}".encode("utf-8")).decode("utf-8")
+    openlit.init(
+        otlp_endpoint=f"{host.rstrip('/')}/api/public/otel",
+        otlp_headers={"Authorization": f"Basic {basic_auth}"},
+    )
 
 
 def _extract_orders(result):
@@ -86,4 +112,5 @@ async def play_crew_powers(hostname="localhost", port=8432):
 
 
 if __name__ == "__main__":
+    _init_langfuse_tracing()
     asyncio.run(play_crew_powers())
