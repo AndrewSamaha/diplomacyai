@@ -8,7 +8,7 @@ from diplomacy.client.connection import connect
 from diplomacy.utils import constants
 
 from bots.crews.random_orders_crew import build_random_orders_crew
-from langfuse import get_client, observe, propagate_attributes
+from langfuse import get_client
 
 def _init_langfuse_tracing():
     """Enable CrewAI tracing to Langfuse when Langfuse env vars are configured."""
@@ -21,7 +21,6 @@ def _init_langfuse_tracing():
         print("Authentication failed. Please check your credentials and host.")
     return langfuse
 
-@observe
 def _extract_orders(result):
     """Extract orders list from a CrewAI result."""
     raw = getattr(result, "raw", result)
@@ -37,6 +36,16 @@ def _extract_orders(result):
     if isinstance(data, list):
         return data
     return None
+
+
+def _serialize_for_trace(value):
+    """Return a JSON-serializable payload for trace output."""
+    if isinstance(value, (dict, list, str, int, float, bool)) or value is None:
+        return value
+    try:
+        return json.loads(value)
+    except (TypeError, json.JSONDecodeError):
+        return str(value)
 
 
 async def play_crew_powers(hostname="localhost", port=8432, langfuse=None):
@@ -87,10 +96,11 @@ async def play_crew_powers(hostname="localhost", port=8432, langfuse=None):
             if langfuse is not None:
                 with langfuse.start_as_current_observation(
                     as_type="span", name="crewai-index-trace", input=inputs
-                ):
+                ) as observation:
                     result = crew.kickoff(inputs=inputs)
                     orders = _extract_orders(result)
-                    langfuse.start_as_current_observation(name="crewai-index-trace", as_type="span", input=inputs, output=result)
+                    raw_output = getattr(result, "raw", result)
+                    observation.update(output=_serialize_for_trace(raw_output))
                     if not orders:
                         print(f"  {power_name}: Crew did not return orders")
                         continue
