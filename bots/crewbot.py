@@ -1,7 +1,5 @@
 import asyncio
 import json
-import os
-from base64 import b64encode
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,54 +8,20 @@ from diplomacy.client.connection import connect
 from diplomacy.utils import constants
 
 from bots.crews.random_orders_crew import build_random_orders_crew
-
+from langfuse import get_client, observe, propagate_attributes
 
 def _init_langfuse_tracing():
     """Enable CrewAI tracing to Langfuse when Langfuse env vars are configured."""
-    public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
-    secret_key = os.getenv("LANGFUSE_SECRET_KEY")
-    host = os.getenv("LANGFUSE_HOST") or os.getenv("LANGFUSE_BASE_URL")
-    missing = []
-    if not public_key:
-        missing.append("LANGFUSE_PUBLIC_KEY")
-    if not secret_key:
-        missing.append("LANGFUSE_SECRET_KEY")
-    if not host:
-        missing.append("LANGFUSE_HOST or LANGFUSE_BASE_URL")
-    if missing:
-        print(
-            "Langfuse tracing disabled: missing env var(s): "
-            + ", ".join(missing)
-        )
-        return
-
-    try:
-        import openlit
-    except ImportError:
-        print(
-            "Langfuse env vars detected, but `openlit` is not installed. "
-            "Run `uv sync` to install tracing dependencies."
-        )
-        return
-
-    host = host.rstrip("/")
-    if host.endswith("/api/public/otel"):
-        otlp_endpoint = host
+    langfuse = get_client()
+ 
+    # Verify connection
+    if langfuse.auth_check():
+        print("Langfuse client is authenticated and ready!")
     else:
-        otlp_endpoint = f"{host}/api/public/otel"
+        print("Authentication failed. Please check your credentials and host.")
+    return langfuse
 
-    # Diagnostic mode: export to Langfuse OTLP and local console spans.
-    os.environ.setdefault("OTEL_TRACES_EXPORTER", "otlp,console")
-    print(f"Langfuse tracing endpoint: {otlp_endpoint}")
-    print(f"OTEL_TRACES_EXPORTER={os.environ.get('OTEL_TRACES_EXPORTER')}")
-
-    basic_auth = b64encode(f"{public_key}:{secret_key}".encode("utf-8")).decode("utf-8")
-    openlit.init(
-        otlp_endpoint=otlp_endpoint,
-        otlp_headers={"Authorization": f"Basic {basic_auth}"},
-    )
-
-
+@observe
 def _extract_orders(result):
     """Extract orders list from a CrewAI result."""
     raw = getattr(result, "raw", result)
@@ -75,7 +39,7 @@ def _extract_orders(result):
     return None
 
 
-async def play_crew_powers(hostname="localhost", port=8432):
+async def play_crew_powers(hostname="localhost", port=8432, langfuse=None):
     """Connect as the private bot, ask a CrewAI agent for orders, and submit them."""
     connection = await connect(hostname, port)
     channel = await connection.authenticate(
@@ -120,13 +84,23 @@ async def play_crew_powers(hostname="localhost", port=8432):
                     for loc in orderable_locations
                 ],
             }
-
-            result = crew.kickoff(inputs=inputs)
-            orders = _extract_orders(result)
-            if not orders:
-                print(f"  {power_name}: Crew did not return orders")
-                continue
-
+            if langfuse is not None:
+                with langfuse.start_as_current_observation(
+                    as_type="span", name="crewai-index-trace", input=inputs
+                ):
+                    result = crew.kickoff(inputs=inputs)
+                    orders = _extract_orders(result)
+                    langfuse.start_as_current_observation(name="crewai-index-trace", as_type="span", input=inputs, output=result)
+                    if not orders:
+                        print(f"  {power_name}: Crew did not return orders")
+                        continue
+                langfuse.flush()
+            else:
+                result = crew.kickoff(inputs=inputs)
+                orders = _extract_orders(result)
+                if not orders:
+                    print(f"  {power_name}: Crew did not return orders")
+                    continue
             print(f"  {power_name} ({game.get_current_phase()}): {orders}")
             await game.set_orders(power_name=power_name, orders=orders, wait=False)
 
@@ -134,5 +108,5 @@ async def play_crew_powers(hostname="localhost", port=8432):
 
 
 if __name__ == "__main__":
-    _init_langfuse_tracing()
-    asyncio.run(play_crew_powers())
+    langfuse = _init_langfuse_tracing()
+    asyncio.run(play_crew_powers(langfuse=langfuse))
