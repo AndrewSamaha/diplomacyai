@@ -4,10 +4,12 @@ This is a fork of the [Diplomacy Game Engine](https://github.com/diplomacy/diplo
 
 1. Download and install uv and pnpm (node version 20.11.1)
 1. Run `uv sync` from project root
+1. Copy `.env.example` to `.env` and fill in the values
 1. Navigate to `diplomacy/web` and run `pnpm install`
 1. Start the BE: `uv run -m diplomacy.server.run`
 1. Start the FE: `cd diplomacy/web && pnpm start`
 1. Run a bot: `uv run -m bots.dummy_bot`
+1. Run a crewai bot: `uv run -m bots.crewbot`
 
 # Original Readme Contents
 
