@@ -48,6 +48,18 @@ def _init_openinference():
 
     CrewAIInstrumentor().instrument()
 
+    # Best-effort LLM instrumentation for token usage.
+    try:
+        from openinference.instrumentation.litellm import LiteLLMInstrumentor
+        LiteLLMInstrumentor().instrument()
+    except Exception:
+        pass
+    try:
+        from openinference.instrumentation.openai import OpenAIInstrumentor
+        OpenAIInstrumentor().instrument()
+    except Exception:
+        pass
+
 
 def _init_langfuse_tracing():
     """Enable CrewAI tracing to Langfuse when Langfuse env vars are configured."""
