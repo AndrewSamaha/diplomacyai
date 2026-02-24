@@ -8,6 +8,8 @@ from diplomacy.client.connection import connect
 from diplomacy.utils import constants
 
 from bots.crews.random_orders_crew import build_random_orders_crew
+from bots.tools.get_game_snapshot import GameSnapshotTool
+from bots.tools.get_random_order import GetRandomOrderTool
 from langfuse import get_client
 
 def _init_langfuse_tracing():
@@ -56,7 +58,6 @@ async def play_crew_powers(hostname="localhost", port=8432, langfuse=None):
         constants.PRIVATE_BOT_PASSWORD,
     )
 
-    crew = build_random_orders_crew()
     active_games = {}
 
     dummy_powers = await channel.get_dummy_waiting_powers(buffer_size=100)
@@ -83,15 +84,13 @@ async def play_crew_powers(hostname="localhost", port=8432, langfuse=None):
                 print(f"  {power_name}: No orderable locations")
                 continue
 
-            possible_orders = game.get_all_possible_orders()
+            tools = [
+                GameSnapshotTool(game=game, power_name=power_name),
+                GetRandomOrderTool(),
+            ]
+            crew = build_random_orders_crew(tools=tools)
             inputs = {
                 "power_name": power_name,
-                "phase": game.get_current_phase(),
-                "orderable_locations": orderable_locations,
-                "possible_orders": [
-                    {"location": loc, "orders": possible_orders.get(loc, [])}
-                    for loc in orderable_locations
-                ],
             }
             if langfuse is not None:
                 with langfuse.start_as_current_observation(
