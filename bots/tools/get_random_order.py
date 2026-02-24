@@ -1,6 +1,6 @@
 import json
 import random
-from typing import List, Type
+from typing import Any, List, Type
 
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
@@ -27,8 +27,17 @@ class GetRandomOrderTool(BaseTool):
     description: str = "Selects a random legal order for each orderable location."
     args_schema: Type[BaseModel] = GetRandomOrderInput
 
-    def _run(self, orderable_locations: List[str], possible_orders: List[PossibleOrdersItem]) -> str:
-        possible_map = {item.location: item.orders for item in possible_orders}
+    def _run(self, orderable_locations: List[str], possible_orders: List[Any]) -> str:
+        possible_map = {}
+        for item in possible_orders:
+            if isinstance(item, dict):
+                location = item.get("location")
+                orders = item.get("orders", [])
+            else:
+                location = getattr(item, "location", None)
+                orders = getattr(item, "orders", [])
+            if location:
+                possible_map[location] = orders
         orders: List[str] = []
         for location in orderable_locations:
             options = possible_map.get(location, [])
