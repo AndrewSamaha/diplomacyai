@@ -117,6 +117,8 @@ PICK_BEST_POWERS = {
     "GERMANY",
 }
 
+MAX_VALIDATION_RETRIES = 2
+
 
 async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None):
     """Compare random vs pick-best crews across fixed power assignments."""
@@ -126,9 +128,7 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
     from bots.crews.pick_best_orders_crew import build_pick_best_orders_crew
     from bots.crews.random_orders_crew import build_random_orders_crew
     from bots.tools.get_position_metrics import GetPositionMetricsTool
-    from bots.tools.get_game_snapshot import GameSnapshotTool
-    from bots.tools.get_random_order import GetRandomOrderTool
-    from bots.tools.get_random_order_candidates import GetRandomOrderCandidatesTool
+    from bots.tools.move_validation import validate_orders
 
     connection = await connect(hostname, port)
     channel = await connection.authenticate(
@@ -164,52 +164,114 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
 
             if power_name in RANDOM_ORDERS_POWERS:
                 crew_name = "random_orders_crew"
-                tools = [
-                    GameSnapshotTool(game=game, power_name=power_name),
-                    GetPositionMetricsTool(game=game),
-                    GetRandomOrderTool(),
-                ]
+                tools = []
                 crew = build_random_orders_crew(tools=tools)
             elif power_name in PICK_BEST_POWERS:
                 crew_name = "pick_best_orders_crew"
-                tools = [
-                    GameSnapshotTool(game=game, power_name=power_name),
-                    GetPositionMetricsTool(game=game),
-                    GetRandomOrderCandidatesTool(),
-                ]
+                tools = []
                 crew = build_pick_best_orders_crew(tools=tools)
             else:
                 crew_name = "random_orders_crew"
-                tools = [
-                    GameSnapshotTool(game=game, power_name=power_name),
-                    GetPositionMetricsTool(game=game),
-                    GetRandomOrderTool(),
-                ]
+                tools = []
                 crew = build_random_orders_crew(tools=tools)
 
-            inputs = {"power_name": power_name, "crew_name": crew_name}
+            possible_orders = game.get_all_possible_orders()
+            possible_orders_list = [
+                {"location": loc, "orders": possible_orders.get(loc, [])}
+                for loc in orderable_locations
+            ]
+            game_snapshot = {
+                "phase": game.get_current_phase(),
+                "power_name": power_name,
+                "orderable_locations": orderable_locations,
+                "possible_orders": possible_orders_list,
+                "units_by_power": {
+                    power.name: list(power.units) for power in game.powers.values()
+                },
+                "centers_by_power": {
+                    power.name: list(power.centers) for power in game.powers.values()
+                },
+            }
 
-            if langfuse is not None:
-                with langfuse.start_as_current_observation(
-                    as_type="span", name="crewai-comparison-trace", input=inputs
-                ) as observation:
-                    result = crew.kickoff(inputs=inputs)
+            metrics_tool = GetPositionMetricsTool(game=game)
+            position_metrics = json.loads(
+                metrics_tool._run(powers=[power_name])
+            )
+
+            base_inputs = {
+                "power_name": power_name,
+                "crew_name": crew_name,
+                "game_snapshot": game_snapshot,
+                "position_metrics": position_metrics,
+                "validation_feedback": None,
+                "previous_orders": None,
+            }
+
+            final_orders = None
+            validation_feedback = None
+            previous_orders = None
+            for attempt in range(1, MAX_VALIDATION_RETRIES + 2):
+                attempt_inputs = dict(base_inputs)
+                attempt_inputs["validation_feedback"] = validation_feedback
+                attempt_inputs["previous_orders"] = previous_orders
+                attempt_inputs["validation_attempt"] = attempt
+
+                if langfuse is not None:
+                    with langfuse.start_as_current_observation(
+                        as_type="span", name="crewai-comparison-trace", input=attempt_inputs
+                    ) as observation:
+                        result = crew.kickoff(inputs=attempt_inputs)
+                        orders = _extract_orders(result)
+                        raw_output = getattr(result, "raw", result)
+                        observation.update(output=_serialize_for_trace(raw_output))
+                    langfuse.flush()
+                else:
+                    result = crew.kickoff(inputs=attempt_inputs)
                     orders = _extract_orders(result)
-                    raw_output = getattr(result, "raw", result)
-                    observation.update(output=_serialize_for_trace(raw_output))
-                    if not orders:
-                        print(f"  {power_name}: Crew did not return orders")
-                        continue
-                langfuse.flush()
-            else:
-                result = crew.kickoff(inputs=inputs)
-                orders = _extract_orders(result)
-                if not orders:
-                    print(f"  {power_name}: Crew did not return orders")
-                    continue
 
-            print(f"  {power_name} ({game.get_current_phase()} | {crew_name}): {orders}")
-            await game.set_orders(power_name=power_name, orders=orders, wait=False)
+                if not orders:
+                    validation_feedback = {
+                        "valid": False,
+                        "errors": [
+                            {
+                                "code": "invalid_agent_output",
+                                "message": "Agent did not return an orders array.",
+                            }
+                        ],
+                        "summary": "Output format invalid. Return JSON object with `orders` list.",
+                    }
+                    previous_orders = orders
+                    if attempt <= MAX_VALIDATION_RETRIES:
+                        continue
+                    print(f"  {power_name}: Crew did not return orders")
+                    break
+
+                report = validate_orders(
+                    game=game,
+                    power_name=power_name,
+                    orders=orders,
+                    require_complete=False,
+                )
+                if report["valid"]:
+                    final_orders = report["normalized_orders"]
+                    break
+
+                validation_feedback = report
+                previous_orders = orders
+                if attempt <= MAX_VALIDATION_RETRIES:
+                    continue
+                print(
+                    f"  {power_name}: Unable to produce valid orders after "
+                    f"{MAX_VALIDATION_RETRIES + 1} attempts."
+                )
+                print(f"  Validation summary: {report.get('summary')}")
+                break
+
+            if not final_orders:
+                continue
+
+            print(f"  {power_name} ({game.get_current_phase()} | {crew_name}): {final_orders}")
+            await game.set_orders(power_name=power_name, orders=final_orders, wait=False)
 
     print("\nDone.")
 

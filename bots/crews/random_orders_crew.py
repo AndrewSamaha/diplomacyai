@@ -7,11 +7,14 @@ def build_random_orders_crew(tools) -> Crew:
     agent = build_order_agent(tools=tools)
     task = Task(
         description=(
-            "Select legal orders for power {power_name}.\n"
-            "First call `get_game_snapshot` (no arguments) to fetch state.\n"
-            "Then call `get_random_order` with:\n"
-            "- orderable_locations: from snapshot.orderable_locations\n"
-            "- possible_orders: from snapshot.possible_orders\n"
+            "Draft orders for power {power_name}.\n"
+            "Use the provided context:\n"
+            "- game_snapshot: {game_snapshot}\n"
+            "- position_metrics: {position_metrics}\n"
+            "If validation_feedback is provided, fix only the invalid parts:\n"
+            "- validation_feedback: {validation_feedback}\n"
+            "- previous_orders: {previous_orders}\n"
+            "Only output orders that are legal in game_snapshot.possible_orders.\n"
             "Return only JSON with the shape: {\"orders\": [\"<order>\", ...]}."
         ),
         expected_output="A JSON object with key `orders` containing a list of legal orders.",

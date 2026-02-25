@@ -15,8 +15,7 @@ def game_state_assessor_agent(tools=None) -> Agent:
         ),
         backstory=(
             "You are an expert at the game of Diplomacy and excel at interpreting"
-            " the game state to identify opportunities and threats. "
-            "Use the provided tool to generate a valid order list."
+            " the game state to identify opportunities and threats."
         ),
         tools=tools,
         allow_delegation=False,
