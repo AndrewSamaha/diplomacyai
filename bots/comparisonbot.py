@@ -108,13 +108,13 @@ RANDOM_ORDERS_POWERS = {
     "AUSTRIA",
     "ENGLAND",
     "FRANCE",
+    "RUSSIA",
+    "TURKEY",
+    "ITALY",
 }
 
 PICK_BEST_POWERS = {
     "GERMANY",
-    "ITALY",
-    "RUSSIA",
-    "TURKEY",
 }
 
 
@@ -125,6 +125,7 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
 
     from bots.crews.pick_best_orders_crew import build_pick_best_orders_crew
     from bots.crews.random_orders_crew import build_random_orders_crew
+    from bots.tools.get_position_metrics import GetPositionMetricsTool
     from bots.tools.get_game_snapshot import GameSnapshotTool
     from bots.tools.get_random_order import GetRandomOrderTool
     from bots.tools.get_random_order_candidates import GetRandomOrderCandidatesTool
@@ -165,6 +166,7 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
                 crew_name = "random_orders_crew"
                 tools = [
                     GameSnapshotTool(game=game, power_name=power_name),
+                    GetPositionMetricsTool(game=game),
                     GetRandomOrderTool(),
                 ]
                 crew = build_random_orders_crew(tools=tools)
@@ -172,6 +174,7 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
                 crew_name = "pick_best_orders_crew"
                 tools = [
                     GameSnapshotTool(game=game, power_name=power_name),
+                    GetPositionMetricsTool(game=game),
                     GetRandomOrderCandidatesTool(),
                 ]
                 crew = build_pick_best_orders_crew(tools=tools)
@@ -179,6 +182,7 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
                 crew_name = "random_orders_crew"
                 tools = [
                     GameSnapshotTool(game=game, power_name=power_name),
+                    GetPositionMetricsTool(game=game),
                     GetRandomOrderTool(),
                 ]
                 crew = build_random_orders_crew(tools=tools)

@@ -9,6 +9,8 @@ def build_pick_best_orders_crew(tools) -> Crew:
         description=(
             "Select the best legal orders for power {power_name}.\n"
             "First call `get_game_snapshot` (no arguments) to fetch state.\n"
+            "Then call `get_position_metrics` to evaluate position strength "
+            "(all metrics or any subset you need).\n"
             "Then call `get_random_order_candidates` with:\n"
             "- orderable_locations: from snapshot.orderable_locations\n"
             "- possible_orders: from snapshot.possible_orders\n"
