@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from langfuse import get_client
+from langfuse import get_client, propagate_attributes
 
 
 def _configure_langfuse_otel():
@@ -107,14 +107,14 @@ def _serialize_for_trace(value):
 RANDOM_ORDERS_POWERS = {
     "AUSTRIA",
     "ENGLAND",
-    "FRANCE",
+    "GERMANY",
     "RUSSIA",
     "TURKEY",
     "ITALY",
 }
 
 PICK_BEST_POWERS = {
-    "GERMANY",
+    "FRANCE",
 }
 
 MAX_VALIDATION_RETRIES = 2
@@ -218,12 +218,21 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
 
                 if langfuse is not None:
                     with langfuse.start_as_current_observation(
-                        as_type="span", name="crewai-comparison-trace", input=attempt_inputs
+                        as_type="span",
+                        name=f"comparisonbot-{game_id}",
+                        input=attempt_inputs
                     ) as observation:
-                        result = crew.kickoff(inputs=attempt_inputs)
-                        orders = _extract_orders(result)
-                        raw_output = getattr(result, "raw", result)
-                        observation.update(output=_serialize_for_trace(raw_output))
+                        with propagate_attributes(
+                            metadata={
+                                "model": os.getenv('OPENAI_MODEL_NAME'),
+                                "crew": "pick_best_orders_crew" if power_name in PICK_BEST_POWERS else "random_orders_crew",
+                                "power": power_name
+                            }
+                        ):
+                            result = crew.kickoff(inputs=attempt_inputs)
+                            orders = _extract_orders(result)
+                            raw_output = getattr(result, "raw", result)
+                            observation.update(output=_serialize_for_trace(raw_output))
                     langfuse.flush()
                 else:
                     result = crew.kickoff(inputs=attempt_inputs)
