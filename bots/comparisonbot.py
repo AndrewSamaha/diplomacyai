@@ -2,6 +2,7 @@ import asyncio
 import base64
 import json
 import os
+import random
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -129,6 +130,8 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
     from bots.crews.random_orders_crew import build_random_orders_crew
     from bots.tools.get_position_metrics import GetPositionMetricsTool
     from bots.tools.move_validation import validate_orders
+    from bots.tools.send_message import SendGlobalMessageTool
+    from bots.utils.game_state import get_human_controlled_powers, get_recent_messages, format_messages_for_context
 
     connection = await connect(hostname, port)
     channel = await connection.authenticate(
@@ -162,6 +165,11 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
                 print(f"  {power_name}: No orderable locations")
                 continue
 
+            human_powers = get_human_controlled_powers(game)
+            taunt_target = random.choice(human_powers) if human_powers and not game.no_press else None
+
+            message_queue = []
+
             if power_name in RANDOM_ORDERS_POWERS:
                 crew_name = "random_orders_crew"
                 tools = []
@@ -169,7 +177,10 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
             elif power_name in PICK_BEST_POWERS:
                 crew_name = "pick_best_orders_crew"
                 tools = []
-                crew = build_pick_best_orders_crew(tools=tools)
+                taunt_tools = []
+                if taunt_target:
+                    taunt_tools = [SendGlobalMessageTool(power_name=power_name, message_queue=message_queue)]
+                crew = build_pick_best_orders_crew(tools=tools, taunt_tools=taunt_tools)
             else:
                 crew_name = "random_orders_crew"
                 tools = []
@@ -191,12 +202,19 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
                 "centers_by_power": {
                     power.name: list(power.centers) for power in game.powers.values()
                 },
+                "human_controlled_powers": human_powers,
             }
 
             metrics_tool = GetPositionMetricsTool(game=game)
             position_metrics = json.loads(
                 metrics_tool._run(powers=[power_name])
             )
+
+            my_power = game.get_power(power_name)
+            target_power = game.get_power(taunt_target) if taunt_target else None
+
+            recent_messages = get_recent_messages(game, limit=20)
+            messages_context = format_messages_for_context(recent_messages)
 
             base_inputs = {
                 "power_name": power_name,
@@ -205,6 +223,14 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
                 "position_metrics": position_metrics,
                 "validation_feedback": None,
                 "previous_orders": None,
+                "phase": game.get_current_phase(),
+                "human_controlled_powers": ", ".join(human_powers) if human_powers else "none",
+                "taunt_target": taunt_target or "none",
+                "target_units": ", ".join(target_power.units) if target_power else "none",
+                "target_centers": ", ".join(target_power.centers) if target_power else "none",
+                "my_units": ", ".join(my_power.units) if my_power.units else "none",
+                "my_centers": ", ".join(my_power.centers) if my_power.centers else "none",
+                "recent_messages": messages_context,
             }
 
             final_orders = None
@@ -226,7 +252,8 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
                             metadata={
                                 "model": os.getenv('OPENAI_MODEL_NAME'),
                                 "crew": "pick_best_orders_crew" if power_name in PICK_BEST_POWERS else "random_orders_crew",
-                                "power": power_name
+                                "power": power_name,
+                                "phase": game.get_current_phase(),
                             }
                         ):
                             result = crew.kickoff(inputs=attempt_inputs)
@@ -281,6 +308,14 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
 
             print(f"  {power_name} ({game.get_current_phase()} | {crew_name}): {final_orders}")
             await game.set_orders(power_name=power_name, orders=final_orders, wait=False)
+
+            for msg_text in message_queue:
+                try:
+                    global_message = game.new_global_message(msg_text)
+                    await game.send_game_message(message=global_message)
+                    print(f"  {power_name}: Sent taunt: {msg_text}")
+                except Exception as e:
+                    print(f"  {power_name}: Failed to send message: {e}")
 
     print("\nDone.")
 
