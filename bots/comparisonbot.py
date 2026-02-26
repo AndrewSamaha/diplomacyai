@@ -105,18 +105,22 @@ def _serialize_for_trace(value):
         return str(value)
 
 
-RANDOM_ORDERS_POWERS = {
-    "AUSTRIA",
-    "ENGLAND",
-    "GERMANY",
-    "RUSSIA",
-    "TURKEY",
-    "ITALY",
+CREW_RANDOM = "random_orders_crew"
+CREW_PICK_BEST = "pick_best_orders_crew"
+CREW_EZRA = "ezra_crew"
+NOCREW_RANDOM = "nocrew_random"
+
+POWER_TO_CREW = {
+    "AUSTRIA": NOCREW_RANDOM,
+    "ENGLAND": NOCREW_RANDOM,
+    "GERMANY": NOCREW_RANDOM,
+    "RUSSIA": NOCREW_RANDOM,
+    "TURKEY": NOCREW_RANDOM,
+    "ITALY": NOCREW_RANDOM,
+    "FRANCE": CREW_PICK_BEST,
 }
 
-PICK_BEST_POWERS = {
-    "FRANCE",
-}
+DEFAULT_CREW = CREW_RANDOM
 
 MAX_VALIDATION_RETRIES = 2
 
@@ -128,10 +132,12 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
 
     from bots.crews.pick_best_orders_crew import build_pick_best_orders_crew
     from bots.crews.random_orders_crew import build_random_orders_crew
+    from bots.crews.ezra_crew import build_ezra_crew
     from bots.tools.get_position_metrics import GetPositionMetricsTool
     from bots.tools.move_validation import validate_orders
     from bots.tools.send_message import SendGlobalMessageTool
     from bots.utils.game_state import get_human_controlled_powers, get_recent_messages, format_messages_for_context
+    from bots.utils.random_orders import get_random_orders
 
     connection = await connect(hostname, port)
     channel = await connection.authenticate(
@@ -169,21 +175,27 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
             taunt_target = random.choice(human_powers) if human_powers and not game.no_press else None
 
             message_queue = []
+            crew_name = POWER_TO_CREW.get(power_name, DEFAULT_CREW)
 
-            if power_name in RANDOM_ORDERS_POWERS:
-                crew_name = "random_orders_crew"
-                tools = []
+            if crew_name == NOCREW_RANDOM:
+                orders = get_random_orders(game, power_name)
+                print(f"  {power_name} ({game.get_current_phase()} | {crew_name}): {orders}")
+                await game.set_orders(power_name=power_name, orders=orders, wait=False)
+                continue
+
+            tools = []
+            taunt_tools = []
+
+            if crew_name in (CREW_PICK_BEST, CREW_EZRA) and taunt_target:
+                taunt_tools = [SendGlobalMessageTool(power_name=power_name, message_queue=message_queue)]
+
+            if crew_name == CREW_RANDOM:
                 crew = build_random_orders_crew(tools=tools)
-            elif power_name in PICK_BEST_POWERS:
-                crew_name = "pick_best_orders_crew"
-                tools = []
-                taunt_tools = []
-                if taunt_target:
-                    taunt_tools = [SendGlobalMessageTool(power_name=power_name, message_queue=message_queue)]
+            elif crew_name == CREW_PICK_BEST:
                 crew = build_pick_best_orders_crew(tools=tools, taunt_tools=taunt_tools)
+            elif crew_name == CREW_EZRA:
+                crew = build_ezra_crew(tools=tools, taunt_tools=taunt_tools)
             else:
-                crew_name = "random_orders_crew"
-                tools = []
                 crew = build_random_orders_crew(tools=tools)
 
             possible_orders = game.get_all_possible_orders()
@@ -251,7 +263,7 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
                         with propagate_attributes(
                             metadata={
                                 "model": os.getenv('OPENAI_MODEL_NAME'),
-                                "crew": "pick_best_orders_crew" if power_name in PICK_BEST_POWERS else "random_orders_crew",
+                                "crew": crew_name,
                                 "power": power_name,
                                 "phase": game.get_current_phase(),
                             }
