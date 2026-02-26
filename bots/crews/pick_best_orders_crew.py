@@ -15,12 +15,14 @@ def build_pick_best_orders_crew(tools, taunt_tools=None) -> Crew:
             "- position_metrics: {position_metrics}\n"
             "If validation_feedback is present, include what must be corrected:\n"
             "- validation_feedback: {validation_feedback}\n"
-            "- previous_orders: {previous_orders}\n"
-            "Provide a concise strategic assessment with opportunities and threats."
+            "- previous_orders: {previous_orders}\n\n"
+            "Provide:\n"
+            "1. A strategic assessment with opportunities and threats\n"
+            "2. The orderable locations and their legal orders from game_snapshot"
         ),
         expected_output=(
-            "A plain english summary of the game state from the perspective of "
-            "{power_name} including opportunities for expansion and threats."
+            "A summary containing: (1) strategic assessment of opportunities and threats "
+            "for {power_name}, and (2) the orderable locations with their possible orders."
         ),
         agent=gsa_agent,
     )
@@ -28,18 +30,13 @@ def build_pick_best_orders_crew(tools, taunt_tools=None) -> Crew:
     bo_agent = build_order_agent(tools=tools)
     pick_the_best_orders_task = Task(
         description=(
-            "Select the best legal orders balances guarding against threats\n"
-            "while aggressively pursuing opportunities for expansion for power\n"
-            " {power_name}.\n"
-            "Use the provided context:\n"
-            "- game_snapshot: {game_snapshot}\n"
-            "- position_metrics: {position_metrics}\n"
-            "If validation_feedback is provided, fix only invalid orders while preserving valid intent.\n"
+            "Select the best legal orders for {power_name} based on the strategic "
+            "assessment provided in your context.\n\n"
+            "Balance guarding against threats while pursuing expansion opportunities.\n"
+            "If validation_feedback is provided, fix only the invalid orders:\n"
             "- validation_feedback: {validation_feedback}\n"
-            "- previous_orders: {previous_orders}\n"
-            "Only output orders that are legal in game_snapshot.possible_orders.\n"
-            "Return only JSON "
-            "with the shape: {\"orders\": [\"<order>\", ...]}."
+            "- previous_orders: {previous_orders}\n\n"
+            "Return only JSON with the shape: {{\"orders\": [\"<order>\", ...]}}."
         ),
         expected_output="A JSON object with key `orders` containing a list of legal orders.",
         agent=bo_agent,
