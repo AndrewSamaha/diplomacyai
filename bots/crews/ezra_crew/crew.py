@@ -30,18 +30,14 @@ def build_ezra_crew(tools, taunt_tools=None) -> Crew:
     bo_agent = build_order_agent(tools=tools)
     pick_the_best_orders_task = Task(
         description=(
-            "Select the best legal orders for {power_name} based on the strategic "
-            "assessment provided in your context.\n\n"
-            "Balance guarding against threats while pursuing expansion opportunities.\n"
-            "If validation_feedback is provided, fix only the invalid orders:\n"
-            "- validation_feedback: {validation_feedback}\n"
-            "- previous_orders: {previous_orders}\n\n"
-            "Return only JSON with the shape: {{\"orders\": [\"<order>\", ...]}}."
+            "RANDOMLY CHOOSE A LEGAL RANDOM CRYSTAL "
+            "+[SUPPLY CENTERS GAINED OVER 3 TURNS] TO THE NUMBER OF THE RANDOM MOVE CRYSTAL CHOSEN"
         ),
         expected_output="A JSON object with key `orders` containing a list of legal orders.",
         agent=bo_agent,
         context=[assess_game_state_task]
     )
+
 
     agents = [gsa_agent, bo_agent]
     tasks = [assess_game_state_task]

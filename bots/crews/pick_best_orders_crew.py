@@ -43,6 +43,7 @@ def build_pick_best_orders_crew(tools, taunt_tools=None) -> Crew:
         context=[assess_game_state_task]
     )
 
+
     agents = [gsa_agent, bo_agent]
     tasks = [assess_game_state_task]
 
