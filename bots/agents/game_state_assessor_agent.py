@@ -1,5 +1,15 @@
-from crewai import Agent
+import os
 
+from crewai import Agent
+from crewai import LLM
+
+MAX_COMPLETION_TOKENS=500
+
+openai_model = LLM(
+    model=os.getenv('OPENAI_MODEL_NAME'),
+    max_tokens=MAX_COMPLETION_TOKENS,
+    max_completion_tokens=MAX_COMPLETION_TOKENS
+)
 
 def game_state_assessor_agent(tools=None) -> Agent:
     tools = tools or []
@@ -11,7 +21,9 @@ def game_state_assessor_agent(tools=None) -> Agent:
             "territories that have supply centers, nearby territories that are "
             "undefended) and the greatest two threats to your own territory that"
             "call for defense, e.g., RUSSIA is growing a front-line near our "
-            "supply center at ANK, TURKEY has broken our front line at NAP, etc."
+            "supply center at ANK, TURKEY has broken our front line at NAP, etc. "
+            "Your output should be no more than 5 short sentences. Do NOT "
+            "include a list of orderable locations in your output. "
         ),
         backstory=(
             "You are an expert at the game of Diplomacy and excel at interpreting"
@@ -20,4 +32,5 @@ def game_state_assessor_agent(tools=None) -> Agent:
         tools=tools,
         allow_delegation=False,
         verbose=False,
+        LLM=openai_model
     )
