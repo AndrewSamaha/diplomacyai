@@ -1,105 +1,10 @@
 import asyncio
-import base64
-import json
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from langfuse import get_client
-
-def _configure_langfuse_otel():
-    """Configure OpenTelemetry exporter for Langfuse if env vars are present."""
-    public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
-    secret_key = os.getenv("LANGFUSE_SECRET_KEY")
-    host = os.getenv("LANGFUSE_HOST") or os.getenv("LANGFUSE_BASE_URL")
-    if not (public_key and secret_key and host):
-        return False
-
-    host = host.rstrip("/")
-    os.environ.setdefault("OTEL_EXPORTER_OTLP_ENDPOINT", f"{host}/api/public/otel")
-    if "OTEL_EXPORTER_OTLP_HEADERS" not in os.environ:
-        auth = base64.b64encode(f"{public_key}:{secret_key}".encode("utf-8")).decode("utf-8")
-        os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Basic {auth}"
-    os.environ.setdefault("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf")
-    os.environ.setdefault("OTEL_SERVICE_NAME", "diplomacyai-crewbot")
-    return True
-
-
-def _init_openinference():
-    """Initialize OpenInference + OTEL exporter for CrewAI spans."""
-    try:
-        from opentelemetry import trace
-        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-        from opentelemetry.sdk.trace import TracerProvider
-        from opentelemetry.sdk.trace.export import BatchSpanProcessor
-        from openinference.instrumentation.crewai import CrewAIInstrumentor
-    except Exception as exc:  # pragma: no cover - best-effort instrumentation
-        print(f"OpenInference init skipped: {exc}")
-        return
-
-    provider = trace.get_tracer_provider()
-    if provider.__class__.__name__ == "ProxyTracerProvider":
-        provider = TracerProvider()
-        trace.set_tracer_provider(provider)
-
-    if hasattr(provider, "add_span_processor"):
-        provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
-
-    CrewAIInstrumentor().instrument()
-
-    # Best-effort LLM instrumentation for token usage.
-    try:
-        from openinference.instrumentation.litellm import LiteLLMInstrumentor
-        LiteLLMInstrumentor().instrument()
-    except Exception:
-        pass
-    try:
-        from openinference.instrumentation.openai import OpenAIInstrumentor
-        OpenAIInstrumentor().instrument()
-    except Exception:
-        pass
-
-
-def _init_langfuse_tracing():
-    """Enable CrewAI tracing to Langfuse when Langfuse env vars are configured."""
-    if _configure_langfuse_otel():
-        _init_openinference()
-
-    langfuse = get_client()
-
-    # Verify connection
-    if langfuse.auth_check():
-        print("Langfuse client is authenticated and ready!")
-    else:
-        print("Authentication failed. Please check your credentials and host.")
-    return langfuse
-
-def _extract_orders(result):
-    """Extract orders list from a CrewAI result."""
-    raw = getattr(result, "raw", result)
-    if isinstance(raw, dict):
-        data = raw
-    else:
-        try:
-            data = json.loads(raw)
-        except (TypeError, json.JSONDecodeError):
-            return None
-    if isinstance(data, dict) and "orders" in data:
-        return data["orders"]
-    if isinstance(data, list):
-        return data
-    return None
-
-
-def _serialize_for_trace(value):
-    """Return a JSON-serializable payload for trace output."""
-    if isinstance(value, (dict, list, str, int, float, bool)) or value is None:
-        return value
-    try:
-        return json.loads(value)
-    except (TypeError, json.JSONDecodeError):
-        return str(value)
+from bots.instrumentation import init_langfuse_tracing
+from bots.utils.crew_output import extract_orders, serialize_for_trace
 
 
 async def play_crew_powers(hostname="localhost", port=8432, langfuse=None):
@@ -156,16 +61,16 @@ async def play_crew_powers(hostname="localhost", port=8432, langfuse=None):
                     as_type="span", name="crewai-index-trace", input=inputs
                 ) as observation:
                     result = crew.kickoff(inputs=inputs)
-                    orders = _extract_orders(result)
+                    orders = extract_orders(result)
                     raw_output = getattr(result, "raw", result)
-                    observation.update(output=_serialize_for_trace(raw_output))
+                    observation.update(output=serialize_for_trace(raw_output))
                     if not orders:
                         print(f"  {power_name}: Crew did not return orders")
                         continue
                 langfuse.flush()
             else:
                 result = crew.kickoff(inputs=inputs)
-                orders = _extract_orders(result)
+                orders = extract_orders(result)
                 if not orders:
                     print(f"  {power_name}: Crew did not return orders")
                     continue
@@ -176,5 +81,5 @@ async def play_crew_powers(hostname="localhost", port=8432, langfuse=None):
 
 
 if __name__ == "__main__":
-    langfuse = _init_langfuse_tracing()
+    langfuse = init_langfuse_tracing(service_name="diplomacyai-crewbot")
     asyncio.run(play_crew_powers(langfuse=langfuse))
