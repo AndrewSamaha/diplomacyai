@@ -10,7 +10,9 @@ from typing import Any
 from dotenv import load_dotenv
 
 from bots.crews.pick_best_orders_crew import build_pick_best_orders_crew
+from bots.instrumentation import init_langfuse_tracing
 from bots.tools.send_message import SendGlobalMessageTool
+from bots.utils.crew_output import serialize_for_trace
 
 load_dotenv()
 
@@ -49,7 +51,7 @@ def _print_env_debug() -> None:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="uv run -m crews.pick_best_orders_crew",
+        prog="uv run -m spec.pick_best_orders_crew",
         description="Run pick_best_orders_crew or one of its elements with mock JSON input.",
     )
     parser.add_argument(
@@ -181,6 +183,7 @@ def _run_element(
     element: str,
     inputs: dict[str, Any],
     include_taunt: bool,
+    langfuse=None,
 ) -> dict[str, Any]:
     message_queue: list[str] = []
     taunt_tools = None
@@ -198,9 +201,21 @@ def _run_element(
     order_task = crew.tasks[-1]
 
     if element == "crew":
-        started = time.perf_counter()
-        result = crew.kickoff(inputs=inputs)
-        latency_ms = (time.perf_counter() - started) * 1000
+        if langfuse is not None:
+            with langfuse.start_as_current_observation(
+                as_type="span",
+                name="pick_best_orders_crew-harness-crew",
+                input=inputs,
+            ) as observation:
+                started = time.perf_counter()
+                result = crew.kickoff(inputs=inputs)
+                latency_ms = (time.perf_counter() - started) * 1000
+                observation.update(output=serialize_for_trace(getattr(result, "raw", result)))
+            langfuse.flush()
+        else:
+            started = time.perf_counter()
+            result = crew.kickoff(inputs=inputs)
+            latency_ms = (time.perf_counter() - started) * 1000
         output_value = _serialize_output(result)
         tokens = _extract_token_metadata(result)
         return {
@@ -218,9 +233,21 @@ def _run_element(
 
     if element == "game_state_assessor_agent":
         assess_task.interpolate_inputs_and_add_conversation_history(inputs)
-        started = time.perf_counter()
-        result = assess_task.execute_sync(agent=assess_task.agent, tools=assess_task.agent.tools)
-        latency_ms = (time.perf_counter() - started) * 1000
+        if langfuse is not None:
+            with langfuse.start_as_current_observation(
+                as_type="span",
+                name="pick_best_orders_crew-harness-game_state_assessor_agent",
+                input=inputs,
+            ) as observation:
+                started = time.perf_counter()
+                result = assess_task.execute_sync(agent=assess_task.agent, tools=assess_task.agent.tools)
+                latency_ms = (time.perf_counter() - started) * 1000
+                observation.update(output=serialize_for_trace(getattr(result, "raw", result)))
+            langfuse.flush()
+        else:
+            started = time.perf_counter()
+            result = assess_task.execute_sync(agent=assess_task.agent, tools=assess_task.agent.tools)
+            latency_ms = (time.perf_counter() - started) * 1000
         return _task_output_payload(result, element, inputs, latency_ms)
 
     if element == "taunt_agent":
@@ -234,13 +261,29 @@ def _run_element(
         assess_latency_ms = (time.perf_counter() - assess_started) * 1000
 
         taunt_task.interpolate_inputs_and_add_conversation_history(inputs)
-        started = time.perf_counter()
-        result = taunt_task.execute_sync(
-            agent=taunt_task.agent,
-            context=getattr(assess_result, "raw", None),
-            tools=taunt_task.agent.tools,
-        )
-        latency_ms = (time.perf_counter() - started) * 1000
+        if langfuse is not None:
+            with langfuse.start_as_current_observation(
+                as_type="span",
+                name="pick_best_orders_crew-harness-taunt_agent",
+                input=inputs,
+            ) as observation:
+                started = time.perf_counter()
+                result = taunt_task.execute_sync(
+                    agent=taunt_task.agent,
+                    context=getattr(assess_result, "raw", None),
+                    tools=taunt_task.agent.tools,
+                )
+                latency_ms = (time.perf_counter() - started) * 1000
+                observation.update(output=serialize_for_trace(getattr(result, "raw", result)))
+            langfuse.flush()
+        else:
+            started = time.perf_counter()
+            result = taunt_task.execute_sync(
+                agent=taunt_task.agent,
+                context=getattr(assess_result, "raw", None),
+                tools=taunt_task.agent.tools,
+            )
+            latency_ms = (time.perf_counter() - started) * 1000
         payload = _task_output_payload(
             result,
             element,
@@ -258,13 +301,29 @@ def _run_element(
         assess_latency_ms = (time.perf_counter() - assess_started) * 1000
 
         order_task.interpolate_inputs_and_add_conversation_history(inputs)
-        started = time.perf_counter()
-        result = order_task.execute_sync(
-            agent=order_task.agent,
-            context=getattr(assess_result, "raw", None),
-            tools=order_task.agent.tools,
-        )
-        latency_ms = (time.perf_counter() - started) * 1000
+        if langfuse is not None:
+            with langfuse.start_as_current_observation(
+                as_type="span",
+                name="pick_best_orders_crew-harness-order_agent",
+                input=inputs,
+            ) as observation:
+                started = time.perf_counter()
+                result = order_task.execute_sync(
+                    agent=order_task.agent,
+                    context=getattr(assess_result, "raw", None),
+                    tools=order_task.agent.tools,
+                )
+                latency_ms = (time.perf_counter() - started) * 1000
+                observation.update(output=serialize_for_trace(getattr(result, "raw", result)))
+            langfuse.flush()
+        else:
+            started = time.perf_counter()
+            result = order_task.execute_sync(
+                agent=order_task.agent,
+                context=getattr(assess_result, "raw", None),
+                tools=order_task.agent.tools,
+            )
+            latency_ms = (time.perf_counter() - started) * 1000
         return _task_output_payload(
             result,
             element,
@@ -284,7 +343,16 @@ def main() -> int:
     try:
         inputs = _load_mock_input(args.mock_input)
         element = _resolve_element(args.element)
-        response = _run_element(element, inputs, include_taunt=args.include_taunt)
+        try:
+            langfuse = init_langfuse_tracing(service_name="diplomacyai-pick-best-harness")
+        except Exception:
+            langfuse = None
+        response = _run_element(
+            element,
+            inputs,
+            include_taunt=args.include_taunt,
+            langfuse=langfuse,
+        )
     except Exception as exc:
         error = {"error": str(exc)}
         print(json.dumps(error, indent=2))
