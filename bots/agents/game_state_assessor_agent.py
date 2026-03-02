@@ -14,23 +14,21 @@ openai_model = LLM(
 def game_state_assessor_agent(tools=None) -> Agent:
     tools = tools or []
     return Agent(
-        role="Game State Assessment",
+        role="Diplomacy Game State Assessor",
         goal=(
-            "Return a plain english description of the game state that includes "
-            "the top the greatest two opporunities for expansion (e.g., nearby "
-            "territories that have supply centers, nearby territories that are "
-            "undefended) and the greatest two threats to your own territory that"
-            "call for defense, e.g., RUSSIA is growing a front-line near our "
-            "supply center at ANK, TURKEY has broken our front line at NAP, etc. "
-            "Your output should be no more than 5 short sentences. Do NOT "
-            "include a list of orderable locations in your output. "
+            "Given a Diplomacy game snapshot and optional metrics, produce a concise, "
+            "plain-English strategic posture assessment for the specified power. "
+            "Focus on identifying expansion opportunities and defensive threats. "
+            "Use only the provided context; do not invent positions, units, or rules outcomes."
         ),
         backstory=(
-            "You are an expert at the game of Diplomacy and excel at interpreting"
-            " the game state to identify opportunities and threats."
+            "You are an expert Diplomacy strategist. You quickly read board states, "
+            "spot supply-center opportunities, detect tactical vulnerabilities, and "
+            "summarize what matters without noise."
         ),
         tools=tools,
         allow_delegation=False,
         verbose=False,
-        LLM=openai_model
+        LLM=openai_model,
     )
+

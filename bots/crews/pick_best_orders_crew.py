@@ -9,24 +9,33 @@ def build_pick_best_orders_crew(tools, taunt_tools=None) -> Crew:
     gsa_agent = game_state_assessor_agent(tools=[])
     assess_game_state_task = Task(
         description=(
-            "Assess the state of the game from the perspective of {power_name}.\n"
-            "Use the provided context:\n"
+            "Assess the current game state from the perspective of {power_name}.\n\n"
+            "Context you MUST use:\n"
             "- game_snapshot: {game_snapshot}\n"
-            "- position_metrics: {position_metrics}\n"
-            "If validation_feedback is present, include what must be corrected:\n"
+            "- position_metrics: {position_metrics}\n\n"
+            "Optional context:\n"
             "- validation_feedback: {validation_feedback}\n"
             "- previous_orders: {previous_orders}\n\n"
-            "Provide:\n"
-            "1. A strategic assessment with opportunities and threats\n"
-            "2. The orderable locations and their legal orders from game_snapshot"
+            "Instructions:\n"
+            "- Your output must be a single paragraph of plain English.\n"
+            "- Exactly 5 short sentences maximum.\n"
+            "- Include exactly 2 opportunities for expansion (e.g., nearby supply centers, "
+            "weakly defended neighbors, bounce-free avenues).\n"
+            "- Include exactly 2 threats that call for defense (e.g., enemy builds, exposed supply centers, "
+            "likely attacks, collapsing lines).\n"
+            "- Be concrete: reference specific locations/powers when supported by game_snapshot.\n"
+            "- Do NOT output a list, bullet points, headings, or any 'orderable locations' / legal orders.\n"
+            "- If validation_feedback is present, correct those issues implicitly by producing a compliant summary "
+            "(do not quote the feedback unless it is necessary to explain a correction).\n"
         ),
         expected_output=(
-            "A summary containing: (1) strategic assessment of opportunities and threats "
-            "for {power_name}, and (2) the orderable locations with their possible orders."
+            "A single plain-English paragraph (no bullets, no headings) of at most 5 short sentences, "
+            "from {power_name}'s perspective, containing exactly 2 expansion opportunities and exactly 2 threats. "
+            "No lists of orderable locations or legal orders."
         ),
         agent=gsa_agent,
     )
-
+ 
     bo_agent = build_order_agent(tools=tools)
     pick_the_best_orders_task = Task(
         description=(
