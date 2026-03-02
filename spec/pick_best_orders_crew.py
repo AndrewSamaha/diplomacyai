@@ -1,3 +1,4 @@
+import asyncio
 import argparse
 import difflib
 import json
@@ -73,6 +74,18 @@ def _build_parser() -> argparse.ArgumentParser:
         "--pretty",
         action="store_true",
         help="Pretty-print JSON output.",
+    )
+    parser.add_argument(
+        "--num-tests",
+        type=int,
+        default=1,
+        help="Number of independent harness runs to execute.",
+    )
+    parser.add_argument(
+        "--max-concurrency",
+        type=int,
+        default=None,
+        help="Maximum number of concurrent runs (defaults to --num-tests).",
     )
     return parser
 
@@ -184,6 +197,8 @@ def _run_element(
     inputs: dict[str, Any],
     include_taunt: bool,
     langfuse=None,
+    run_index: int | None = None,
+    num_tests: int | None = None,
 ) -> dict[str, Any]:
     message_queue: list[str] = []
     taunt_tools = None
@@ -204,8 +219,17 @@ def _run_element(
         if langfuse is not None:
             with langfuse.start_as_current_observation(
                 as_type="span",
-                name="pick_best_orders_crew-harness-crew",
-                input=inputs,
+                name=(
+                    "pick_best_orders_crew-harness-crew"
+                    if run_index is None
+                    else f"pick_best_orders_crew-harness-crew-{run_index}"
+                ),
+                input={
+                    "run_index": run_index,
+                    "num_tests": num_tests,
+                    "element": element,
+                    "inputs": inputs,
+                },
             ) as observation:
                 started = time.perf_counter()
                 result = crew.kickoff(inputs=inputs)
@@ -236,8 +260,17 @@ def _run_element(
         if langfuse is not None:
             with langfuse.start_as_current_observation(
                 as_type="span",
-                name="pick_best_orders_crew-harness-game_state_assessor_agent",
-                input=inputs,
+                name=(
+                    "pick_best_orders_crew-harness-game_state_assessor_agent"
+                    if run_index is None
+                    else f"pick_best_orders_crew-harness-game_state_assessor_agent-{run_index}"
+                ),
+                input={
+                    "run_index": run_index,
+                    "num_tests": num_tests,
+                    "element": element,
+                    "inputs": inputs,
+                },
             ) as observation:
                 started = time.perf_counter()
                 result = assess_task.execute_sync(agent=assess_task.agent, tools=assess_task.agent.tools)
@@ -264,8 +297,17 @@ def _run_element(
         if langfuse is not None:
             with langfuse.start_as_current_observation(
                 as_type="span",
-                name="pick_best_orders_crew-harness-taunt_agent",
-                input=inputs,
+                name=(
+                    "pick_best_orders_crew-harness-taunt_agent"
+                    if run_index is None
+                    else f"pick_best_orders_crew-harness-taunt_agent-{run_index}"
+                ),
+                input={
+                    "run_index": run_index,
+                    "num_tests": num_tests,
+                    "element": element,
+                    "inputs": inputs,
+                },
             ) as observation:
                 started = time.perf_counter()
                 result = taunt_task.execute_sync(
@@ -304,8 +346,17 @@ def _run_element(
         if langfuse is not None:
             with langfuse.start_as_current_observation(
                 as_type="span",
-                name="pick_best_orders_crew-harness-order_agent",
-                input=inputs,
+                name=(
+                    "pick_best_orders_crew-harness-order_agent"
+                    if run_index is None
+                    else f"pick_best_orders_crew-harness-order_agent-{run_index}"
+                ),
+                input={
+                    "run_index": run_index,
+                    "num_tests": num_tests,
+                    "element": element,
+                    "inputs": inputs,
+                },
             ) as observation:
                 started = time.perf_counter()
                 result = order_task.execute_sync(
@@ -335,6 +386,57 @@ def _run_element(
     raise ValueError(f"Unhandled element '{element}'.")
 
 
+async def _run_many(
+    element: str,
+    inputs: dict[str, Any],
+    include_taunt: bool,
+    langfuse,
+    num_tests: int,
+    max_concurrency: int,
+) -> dict[str, Any]:
+    semaphore = asyncio.Semaphore(max_concurrency)
+
+    async def _run_single(run_index: int) -> dict[str, Any]:
+        async with semaphore:
+            try:
+                payload = await asyncio.to_thread(
+                    _run_element,
+                    element,
+                    inputs,
+                    include_taunt,
+                    langfuse,
+                    run_index,
+                    num_tests,
+                )
+                payload["run_index"] = run_index
+                payload["ok"] = True
+                return payload
+            except Exception as exc:
+                return {
+                    "run_index": run_index,
+                    "ok": False,
+                    "error": str(exc),
+                }
+
+    started = time.perf_counter()
+    runs = await asyncio.gather(*[_run_single(i + 1) for i in range(num_tests)])
+    total_wall_time_ms = (time.perf_counter() - started) * 1000
+
+    successes = sum(1 for run in runs if run.get("ok"))
+    failures = num_tests - successes
+    return {
+        "summary": {
+            "element": element,
+            "num_tests": num_tests,
+            "max_concurrency": max_concurrency,
+            "successes": successes,
+            "failures": failures,
+            "total_wall_time_ms": round(total_wall_time_ms, 3),
+        },
+        "runs": runs,
+    }
+
+
 def main() -> int:
     parser = _build_parser()
     args = parser.parse_args()
@@ -343,16 +445,33 @@ def main() -> int:
     try:
         inputs = _load_mock_input(args.mock_input)
         element = _resolve_element(args.element)
+        if args.num_tests < 1:
+            raise ValueError("--num-tests must be >= 1.")
+        if args.max_concurrency is not None and args.max_concurrency < 1:
+            raise ValueError("--max-concurrency must be >= 1.")
+        max_concurrency = args.max_concurrency or args.num_tests
         try:
             langfuse = init_langfuse_tracing(service_name="diplomacyai-pick-best-harness")
         except Exception:
             langfuse = None
-        response = _run_element(
-            element,
-            inputs,
-            include_taunt=args.include_taunt,
-            langfuse=langfuse,
-        )
+        if args.num_tests == 1:
+            response = _run_element(
+                element,
+                inputs,
+                include_taunt=args.include_taunt,
+                langfuse=langfuse,
+            )
+        else:
+            response = asyncio.run(
+                _run_many(
+                    element=element,
+                    inputs=inputs,
+                    include_taunt=args.include_taunt,
+                    langfuse=langfuse,
+                    num_tests=args.num_tests,
+                    max_concurrency=max_concurrency,
+                )
+            )
     except Exception as exc:
         error = {"error": str(exc)}
         print(json.dumps(error, indent=2))
