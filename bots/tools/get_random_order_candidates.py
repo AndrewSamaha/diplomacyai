@@ -11,7 +11,7 @@ class PossibleOrdersItem(BaseModel):
     orders: List[str] = Field(..., description="Legal orders for that location.")
 
 
-class GetRandomOrderInput(BaseModel):
+class GetRandomOrderCandidatesInput(BaseModel):
     orderable_locations: List[str] = Field(
         ...,
         description="Locations that require orders for the current power.",
@@ -20,14 +20,23 @@ class GetRandomOrderInput(BaseModel):
         ...,
         description="List of legal orders per location.",
     )
+    n_candidates: int = Field(
+        10,
+        description="Number of random candidate order sets to generate.",
+    )
 
 
-class GetRandomOrderTool(BaseTool):
-    name: str = "get_random_order"
-    description: str = "Selects a random legal order for each orderable location."
-    args_schema: Type[BaseModel] = GetRandomOrderInput
+class GetRandomOrderCandidatesTool(BaseTool):
+    name: str = "get_random_order_candidates"
+    description: str = "Generate multiple random legal order sets."
+    args_schema: Type[BaseModel] = GetRandomOrderCandidatesInput
 
-    def _run(self, orderable_locations: List[str], possible_orders: List[Any]) -> str:
+    def _run(
+        self,
+        orderable_locations: List[str],
+        possible_orders: List[Any],
+        n_candidates: int = 10,
+    ) -> str:
         possible_map = {}
         for item in possible_orders:
             if isinstance(item, dict):
@@ -38,9 +47,14 @@ class GetRandomOrderTool(BaseTool):
                 orders = getattr(item, "orders", [])
             if location:
                 possible_map[location] = orders
-        orders: List[str] = []
-        for location in orderable_locations:
-            options = possible_map.get(location, [])
-            if options:
-                orders.append(random.choice(options))
-        return json.dumps({"orders": orders})
+
+        candidates: List[List[str]] = []
+        for _ in range(max(1, n_candidates)):
+            orders: List[str] = []
+            for location in orderable_locations:
+                options = possible_map.get(location, [])
+                if options:
+                    orders.append(random.choice(options))
+            candidates.append(orders)
+
+        return json.dumps({"candidates": candidates})

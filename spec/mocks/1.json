@@ -1,0 +1,329 @@
+{
+    "power_name": "FRANCE",
+    "crew_name": "pick_best_orders_crew",
+    "game_snapshot": {
+        "phase": "S1941M",
+        "power_name": "FRANCE",
+        "orderable_locations": [
+            "BRE",
+            "BUR",
+            "DEN",
+            "HOL",
+            "MAR"
+        ],
+        "possible_orders": [
+            {
+                "location": "BRE",
+                "orders": [
+                    "A BRE S A BUR - PIC",
+                    "A BRE S A LON - PIC",
+                    "A BRE - GAS",
+                    "A BRE S A PAR",
+                    "A BRE S A PAR - PIC",
+                    "A BRE S A PIC - PAR",
+                    "A BRE S A PIC",
+                    "A BRE S A PAR - GAS",
+                    "A BRE - PIC VIA",
+                    "A BRE - WAL VIA",
+                    "A BRE S F ENG - PIC",
+                    "A BRE - PIC",
+                    "A BRE - LON VIA",
+                    "A BRE - PAR",
+                    "A BRE S A BUR - PAR",
+                    "A BRE H",
+                    "A BRE - BEL VIA",
+                    "A BRE S A BUR - GAS"
+                ]
+            },
+            {
+                "location": "BUR",
+                "orders": [
+                    "A BUR S F MAR",
+                    "A BUR S A BRE - PIC",
+                    "A BUR - MUN",
+                    "A BUR S A PIC",
+                    "A BUR S A RUH - BEL",
+                    "A BUR S A LON - PIC",
+                    "A BUR S A RUH - MUN",
+                    "A BUR - PAR",
+                    "A BUR S A PIC - PAR",
+                    "A BUR S F ENG - PIC",
+                    "A BUR S A RUH",
+                    "A BUR S A PAR - GAS",
+                    "A BUR S A PAR - PIC",
+                    "A BUR S A PIC - BEL",
+                    "A BUR - BEL",
+                    "A BUR H",
+                    "A BUR S F ENG - BEL",
+                    "A BUR S A LON - BEL",
+                    "A BUR S A BRE - BEL",
+                    "A BUR S A PAR",
+                    "A BUR S F HOL - BEL",
+                    "A BUR - PIC",
+                    "A BUR S A BRE - GAS",
+                    "A BUR S A BRE - PAR",
+                    "A BUR - GAS",
+                    "A BUR - RUH",
+                    "A BUR - MAR"
+                ]
+            },
+            {
+                "location": "DEN",
+                "orders": [
+                    "A DEN H",
+                    "A DEN - SWE",
+                    "A DEN - HOL VIA",
+                    "A DEN S A RUH - KIE",
+                    "A DEN - KIE VIA",
+                    "A DEN S F HEL - KIE",
+                    "A DEN S F HOL - KIE",
+                    "A DEN - KIE"
+                ]
+            },
+            {
+                "location": "HOL",
+                "orders": [
+                    "F HOL - NTH",
+                    "F HOL - HEL",
+                    "F HOL S A DEN - KIE",
+                    "F HOL - BEL",
+                    "F HOL S F HEL",
+                    "F HOL - KIE",
+                    "F HOL S F YOR - NTH",
+                    "F HOL S A RUH - BEL",
+                    "F HOL H",
+                    "F HOL S F HEL - NTH",
+                    "F HOL S F ENG - NTH",
+                    "F HOL S A PIC - BEL",
+                    "F HOL S F HEL - KIE",
+                    "F HOL S A RUH - KIE",
+                    "F HOL S F ENG - BEL",
+                    "F HOL S A BRE - BEL",
+                    "F HOL S A BUR - BEL",
+                    "F HOL S A LON - BEL"
+                ]
+            },
+            {
+                "location": "MAR",
+                "orders": [
+                    "F MAR H",
+                    "F MAR - SPA/SC",
+                    "F MAR - LYO",
+                    "F MAR - PIE",
+                    "F MAR S A VEN - PIE"
+                ]
+            }
+        ],
+        "units_by_power": {
+            "AUSTRIA": [
+                "A SER",
+                "A BUD",
+                "A VIE",
+                "A GRE",
+                "A PIC",
+                "A TRI"
+            ],
+            "ENGLAND": [
+                "A LON",
+                "F WAL",
+                "F YOR"
+            ],
+            "FRANCE": [
+                "F HOL",
+                "A DEN",
+                "A BRE",
+                "A BUR",
+                "F MAR"
+            ],
+            "GERMANY": [],
+            "ITALY": [
+                "A PAR",
+                "A VEN",
+                "A ROM",
+                "A NAP"
+            ],
+            "RUSSIA": [
+                "F HEL",
+                "A PRU",
+                "A WAR",
+                "A RUH",
+                "A STP",
+                "F ENG"
+            ],
+            "TURKEY": [
+                "A BUL",
+                "A RUM",
+                "A CON",
+                "A ANK",
+                "A SYR",
+                "F ION"
+            ]
+        },
+        "centers_by_power": {
+            "AUSTRIA": [
+                "VIE",
+                "BUD",
+                "SER",
+                "GRE",
+                "TRI",
+                "BER"
+            ],
+            "ENGLAND": [
+                "LON",
+                "LVP",
+                "EDI"
+            ],
+            "FRANCE": [
+                "SPA",
+                "MAR",
+                "KIE",
+                "HOL",
+                "DEN",
+                "BRE"
+            ],
+            "GERMANY": [],
+            "ITALY": [
+                "NAP",
+                "ROM",
+                "PAR",
+                "VEN"
+            ],
+            "RUSSIA": [
+                "WAR",
+                "SWE",
+                "MOS",
+                "NWY",
+                "MUN",
+                "BEL",
+                "STP"
+            ],
+            "TURKEY": [
+                "ANK",
+                "CON",
+                "SMY",
+                "SEV",
+                "BUL",
+                "RUM"
+            ]
+        },
+        "human_controlled_powers": []
+    },
+    "position_metrics": {
+        "phase": "S1941M",
+        "metrics_returned": [
+            "build_pressure",
+            "growth_trend",
+            "center_quality",
+            "frontline_exposure",
+            "defensive_coverage",
+            "offensive_reach",
+            "support_network_strength",
+            "mobility_tempo",
+            "positional_cohesion",
+            "conflict_load",
+            "order_efficiency",
+            "influence_footprint"
+        ],
+        "powers_returned": [
+            "FRANCE"
+        ],
+        "metrics": {
+            "build_pressure": {
+                "FRANCE": {
+                    "supply_centers": 6,
+                    "units": 5,
+                    "territories": 10,
+                    "build_pressure": 1
+                }
+            },
+            "growth_trend": {
+                "FRANCE": {
+                    "delta_supply_centers": 0,
+                    "delta_units": 1,
+                    "delta_territories": 0
+                }
+            },
+            "center_quality": {
+                "FRANCE": {
+                    "home_centers_held": 2,
+                    "enemy_home_centers_held": 1
+                }
+            },
+            "frontline_exposure": {
+                "FRANCE": {
+                    "exposed_units": 0,
+                    "exposed_centers": 0
+                }
+            },
+            "defensive_coverage": {
+                "FRANCE": {
+                    "covered_centers": 6,
+                    "total_centers": 6,
+                    "coverage_ratio": 1
+                }
+            },
+            "offensive_reach": {
+                "FRANCE": {
+                    "reachable_enemy_centers": 5,
+                    "enemy_centers_targeted": [
+                        "BEL",
+                        "LON",
+                        "MUN",
+                        "PAR",
+                        "SWE"
+                    ]
+                }
+            },
+            "support_network_strength": {
+                "FRANCE": {
+                    "support_options": 46,
+                    "support_options_per_orderable_unit": 9.2
+                }
+            },
+            "mobility_tempo": {
+                "FRANCE": {
+                    "legal_orders": 76,
+                    "move_options": 64,
+                    "move_options_per_orderable_unit": 12.8
+                }
+            },
+            "positional_cohesion": {
+                "FRANCE": {
+                    "connected_components": 4,
+                    "largest_component_ratio": 0.4
+                }
+            },
+            "conflict_load": {
+                "FRANCE": {
+                    "contested_provinces_involved": 0,
+                    "enemy_fronts_pressuring": 0
+                }
+            },
+            "order_efficiency": {
+                "FRANCE": {
+                    "order_count": 1,
+                    "success_rate": 1,
+                    "bounce_rate": 0,
+                    "dislodged_rate": 0
+                }
+            },
+            "influence_footprint": {
+                "FRANCE": {
+                    "influenced_territories": 10,
+                    "adjacent_reachable_territories": 20
+                }
+            }
+        }
+    },
+    "validation_feedback": null,
+    "previous_orders": null,
+    "phase": "S1941M",
+    "human_controlled_powers": "none",
+    "taunt_target": "none",
+    "target_units": "none",
+    "target_centers": "none",
+    "my_units": "F HOL, A DEN, A BRE, A BUR, F MAR",
+    "my_centers": "SPA, MAR, KIE, HOL, DEN, BRE",
+    "recent_messages": "No messages yet.",
+    "validation_attempt": 1
+}

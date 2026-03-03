@@ -11,6 +11,87 @@ This is a fork of the [Diplomacy Game Engine](https://github.com/diplomacy/diplo
 1. Run a bot: `uv run -m bots.dummy_bot`
 1. Run a crewai bot: `uv run -m bots.crewbot`
 
+## Run `pick_best_orders_crew` CLI Test Harness
+
+Use this CLI test harness to execute the full crew or one element in isolation:
+
+```bash
+uv run -m spec.pick_best_orders_crew --help
+```
+
+Required arguments:
+
+1. `--element`: `crew`, `game_state_assessor_agent`, `order_agent`, or `taunt_agent`
+1. `--mock-input`: JSON source as a file path, `-` (stdin), or inline JSON string
+
+Optional arguments:
+
+1. `--num-tests`: number of independent runs to execute (default: `1`)
+1. `--max-concurrency`: max number of concurrent runs (default: same as `--num-tests`)
+1. `--include-taunt`: include taunt task when running `taunt_agent`
+1. `--pretty`: pretty-print JSON output
+
+Examples:
+
+```bash
+# Run game state assessor with input from file
+uv run -m spec.pick_best_orders_crew \
+  --element=game_state_assessor_agent \
+  --mock-input=spec/mocks/1.json \
+  --pretty
+
+# Run order agent (assessor context is executed first automatically)
+uv run -m spec.pick_best_orders_crew \
+  --element=order_agent \
+  --mock-input=spec/mocks/1.json \
+  --pretty
+
+# Run taunt agent (must enable taunt task)
+uv run -m spec.pick_best_orders_crew \
+  --element=taunt_agent \
+  --include-taunt \
+  --mock-input=spec/mocks/1.json \
+  --pretty
+
+# Run full crew
+uv run -m spec.pick_best_orders_crew \
+  --element=crew \
+  --mock-input=spec/mocks/1.json \
+  --pretty
+
+# Run 10 assessor generations concurrently
+uv run -m spec.pick_best_orders_crew \
+  --element=game_state_assessor_agent \
+  --mock-input=spec/mocks/1.json \
+  --num-tests=10 \
+  --pretty
+
+# Run 10 tests with concurrency capped at 3
+uv run -m spec.pick_best_orders_crew \
+  --element=game_state_assessor_agent \
+  --mock-input=spec/mocks/1.json \
+  --num-tests=10 \
+  --max-concurrency=3 \
+  --pretty
+```
+
+The command outputs JSON with:
+
+1. `output`: element result
+1. `metadata.latency_ms`: execution latency
+1. `metadata.dependency_latency_ms`: latency from prerequisite context task(s), when applicable
+1. `metadata.input_token_length`, `output_token_length`, `total_token_length`: token metrics when available from CrewAI
+1. `metadata.input_char_length`, `output_char_length`: always present
+1. `metadata.queued_messages`: for taunt runs
+
+Notes:
+
+1. `order_agent` and `taunt_agent` runs execute the assessor task first to provide context.
+1. Token metrics are available for full crew runs; task-level runs may report null token counts depending on CrewAI output fields.
+1. Common typo alias supported: `--element=game_state_assessor_agen`.
+1. With `--num-tests > 1`, output shape is batch mode: top-level `summary` and `runs`.
+1. Batch runs create separate Langfuse observations with run index metadata.
+
 # Original Readme Contents
 
 # Diplomacy: DATC-Compliant Game Engine [![Build Status](https://travis-ci.org/diplomacy/diplomacy.svg?branch=master)](https://travis-ci.org/diplomacy/diplomacy) [![Documentation Status](https://readthedocs.org/projects/diplomacy/badge/?version=latest)](https://diplomacy.readthedocs.io/en/latest/?badge=latest)
