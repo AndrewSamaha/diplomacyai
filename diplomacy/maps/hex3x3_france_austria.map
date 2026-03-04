@@ -1,0 +1,22 @@
+# Hex 3x3 - France vs Austria
+MAP hex3x3.map
+UNPLAYED ENGLAND, GERMANY, ITALY, RUSSIA, TURKEY
+
+# Every territory is a supply center.
+UNOWNED                    AAA AAC ABB ACA ACC
+
+# Austria setup
+AUSTRIA     (AUSTRIAN)
+HOME ACB ABC
+CENTERS ACB ABC
+UNITS
+A ACB
+A ABC
+
+# France setup
+FRANCE      (FRENCH)
+HOME ABA AAB
+CENTERS ABA AAB
+UNITS
+A ABA
+A AAB

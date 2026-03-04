@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "svg.dtd">
+<svg
+  width="600px"
+  height="450px"
+  viewBox="0 0 1000 750"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  text-rendering="optimizeLegibility"
+  preserveAspectRatio="xMinYMin"
+  xmlns:jdipNS="svg.dtd">
+
+  <jdipNS:DISPLAY>
+    <jdipNS:ZOOM min="5" max="1000" factor="1.2"/>
+    <jdipNS:LABELS brief="false" full="false"/>
+  </jdipNS:DISPLAY>
+
+  <jdipNS:ORDERDRAWING>
+    <jdipNS:POWERCOLORS>
+      <jdipNS:POWERCOLOR power="austria" color="#DA251D"/>
+      <jdipNS:POWERCOLOR power="england" color="#2D77B2"/>
+      <jdipNS:POWERCOLOR power="france" color="#8E85B7"/>
+      <jdipNS:POWERCOLOR power="germany" color="#666666"/>
+      <jdipNS:POWERCOLOR power="italy" color="#40A340"/>
+      <jdipNS:POWERCOLOR power="russia" color="#EEF0E9"/>
+      <jdipNS:POWERCOLOR power="turkey" color="#E9F507"/>
+    </jdipNS:POWERCOLORS>
+
+    <jdipNS:SYMBOLSIZE name="Fleet" width="40" height="40"/>
+    <jdipNS:SYMBOLSIZE name="Army" width="40" height="40"/>
+    <jdipNS:SYMBOLSIZE name="Wing" width="40" height="40"/>
+    <jdipNS:SYMBOLSIZE name="DislodgedFleet" width="40" height="40"/>
+    <jdipNS:SYMBOLSIZE name="DislodgedArmy" width="40" height="40"/>
+    <jdipNS:SYMBOLSIZE name="DislodgedWing" width="40" height="40"/>
+    <jdipNS:SYMBOLSIZE name="FailedOrder" width="30" height="30"/>
+    <jdipNS:SYMBOLSIZE name="SupplyCenter" width="20" height="20"/>
+    <jdipNS:SYMBOLSIZE name="BuildUnit" width="60" height="60"/>
+    <jdipNS:SYMBOLSIZE name="RemoveUnit" width="50" height="50"/>
+    <jdipNS:SYMBOLSIZE name="WaivedBuild" width="40" height="40"/>
+    <jdipNS:SYMBOLSIZE name="HoldUnit" width="66.6" height="66.6"/>
+    <jdipNS:SYMBOLSIZE name="SupportHoldUnit" width="76.6" height="76.6"/>
+    <jdipNS:SYMBOLSIZE name="ConvoyTriangle" width="66.4" height="57.4"/>
+    <jdipNS:SYMBOLSIZE name="Stroke" width="6" height="10"/>
+  </jdipNS:ORDERDRAWING>
+
+  <jdipNS:PROVINCE_DATA>
+    <jdipNS:PROVINCE name="aaa"><jdipNS:UNIT x="250" y="250"/><jdipNS:DISLODGED_UNIT x="262" y="238"/><jdipNS:SUPPLY_CENTER x="250" y="250"/></jdipNS:PROVINCE>
+    <jdipNS:PROVINCE name="aab"><jdipNS:UNIT x="406" y="250"/><jdipNS:DISLODGED_UNIT x="418" y="238"/><jdipNS:SUPPLY_CENTER x="406" y="250"/></jdipNS:PROVINCE>
+    <jdipNS:PROVINCE name="aac"><jdipNS:UNIT x="562" y="250"/><jdipNS:DISLODGED_UNIT x="574" y="238"/><jdipNS:SUPPLY_CENTER x="562" y="250"/></jdipNS:PROVINCE>
+    <jdipNS:PROVINCE name="aba"><jdipNS:UNIT x="328" y="385"/><jdipNS:DISLODGED_UNIT x="340" y="373"/><jdipNS:SUPPLY_CENTER x="328" y="385"/></jdipNS:PROVINCE>
+    <jdipNS:PROVINCE name="abb"><jdipNS:UNIT x="484" y="385"/><jdipNS:DISLODGED_UNIT x="496" y="373"/><jdipNS:SUPPLY_CENTER x="484" y="385"/></jdipNS:PROVINCE>
+    <jdipNS:PROVINCE name="abc"><jdipNS:UNIT x="640" y="385"/><jdipNS:DISLODGED_UNIT x="652" y="373"/><jdipNS:SUPPLY_CENTER x="640" y="385"/></jdipNS:PROVINCE>
+    <jdipNS:PROVINCE name="aca"><jdipNS:UNIT x="406" y="520"/><jdipNS:DISLODGED_UNIT x="418" y="508"/><jdipNS:SUPPLY_CENTER x="406" y="520"/></jdipNS:PROVINCE>
+    <jdipNS:PROVINCE name="acb"><jdipNS:UNIT x="562" y="520"/><jdipNS:DISLODGED_UNIT x="574" y="508"/><jdipNS:SUPPLY_CENTER x="562" y="520"/></jdipNS:PROVINCE>
+    <jdipNS:PROVINCE name="acc"><jdipNS:UNIT x="718" y="520"/><jdipNS:DISLODGED_UNIT x="730" y="508"/><jdipNS:SUPPLY_CENTER x="718" y="520"/></jdipNS:PROVINCE>
+  </jdipNS:PROVINCE_DATA>
+
+  <title>Hex 3x3</title>
+  <defs>
+    <style type="text/css"><![CDATA[
+      svg { font-size: 100% }
+      .labeltext24 { text-anchor: middle; stroke-width: 0.1; stroke: black; fill: black; font-size: 1.2em; font-family: serif, sans-serif; }
+      .currentnotetext { font-family: serif, sans-serif; font-size: 1.2em; fill: black; stroke: black; }
+      .currentphasetext { font-family: serif, sans-serif; font-size: 2em; fill: black; stroke: black; }
+      .currentnoterect { fill: #c5dfea; }
+      .invisibleContent { stroke: #000000; fill: #000000; fill-opacity: 0.0; opacity: 0.0 }
+
+      .provinceRed { fill: url(#patternRed); }
+      .provinceBrown { fill: url(#patternBrown); }
+      .provinceGreen { fill: url(#patternGreen); }
+      .provinceBlack { fill: url(#patternBlack); }
+      .provinceBlue { fill: url(#patternBlue); }
+
+      .nopower { fill: antiquewhite; stroke: #000000; stroke-width: 2; }
+      .water { fill: #c5dfea; stroke: #000000; stroke-width: 2; }
+      .neutral { fill: lightgray; stroke: #000000; stroke-width: 2; }
+
+      .austria { fill: #c48f85; stroke: #000000; stroke-width: 2; }
+      .england { fill: darkviolet; stroke: #000000; stroke-width: 2; }
+      .france { fill: royalblue; stroke: #000000; stroke-width: 2; }
+      .germany { fill: #a08a75; stroke: #000000; stroke-width: 2; }
+      .italy { fill: forestgreen; stroke: #000000; stroke-width: 2; }
+      .russia { fill: #757d91; stroke: #000000; stroke-width: 2; }
+      .turkey { fill: #b9a61c; stroke: #000000; stroke-width: 2; }
+
+      .unitaustria { fill: red; fill-opacity: 0.85; }
+      .unitengland { fill: mediumpurple; fill-opacity: 0.85; }
+      .unitfrance { fill: deepskyblue; fill-opacity: 0.85; }
+      .unitgermany { fill: dimgray; fill-opacity: 0.85; }
+      .unititaly { fill: olive; fill-opacity: 0.85; }
+      .unitrussia { fill: white; fill-opacity: 1.0; }
+      .unitturkey { fill: yellow; fill-opacity: 0.85; }
+
+      .supportorder { stroke-width: 6; fill: none; stroke-dasharray: 5,5; }
+      .convoyorder { stroke-dasharray: 15,5; stroke-width: 6; fill: none; }
+      .shadowdash { stroke-width: 10; fill: none; stroke: black; opacity: 0.45; }
+      .varwidthorder { fill: none; }
+      .varwidthshadow { fill: none; stroke: black; }
+      .visibilityHidden { visibility: hidden; }
+    ]]></style>
+
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="strokeWidth" markerWidth="4" markerHeight="3" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z"/>
+    </marker>
+
+    <pattern id="patternRed" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="10" height="10" fill="red"/>
+      <rect x="5" y="0" width="10" height="10" fill="pink"/>
+    </pattern>
+    <pattern id="patternBrown" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="10" height="10" fill="peru"/>
+      <rect x="5" y="0" width="10" height="10" fill="antiquewhite"/>
+    </pattern>
+    <pattern id="patternGreen" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="10" height="10" fill="seagreen"/>
+      <rect x="5" y="0" width="10" height="10" fill="yellowgreen"/>
+    </pattern>
+    <pattern id="patternBlue" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="10" height="10" fill="CornflowerBlue"/>
+      <rect x="5" y="0" width="10" height="10" fill="cyan"/>
+    </pattern>
+    <pattern id="patternBlack" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="10" height="10" fill="black"/>
+      <rect x="0" y="5" width="10" height="10" fill="gray"/>
+    </pattern>
+
+    <symbol id="Army" viewBox="0 0 23 15" overflow="visible">
+      <rect x="0" y="0" width="23" height="13" rx="4" stroke="black" stroke-width="1.5" fill="currentColor"/>
+    </symbol>
+    <symbol id="Fleet" viewBox="0 0 23 15" overflow="visible">
+      <rect x="0" y="0" width="23" height="13" rx="4" stroke="black" stroke-width="1.5" fill="currentColor"/>
+    </symbol>
+    <symbol id="DislodgedArmy" viewBox="0 0 23 15" overflow="visible">
+      <rect x="0" y="0" width="23" height="13" rx="4" stroke="red" stroke-width="2" fill="currentColor"/>
+    </symbol>
+    <symbol id="DislodgedFleet" viewBox="0 0 23 15" overflow="visible">
+      <rect x="0" y="0" width="23" height="13" rx="4" stroke="red" stroke-width="2" fill="currentColor"/>
+    </symbol>
+
+    <symbol id="HoldUnit" viewBox="-5 -5 76.6 76.6" overflow="visible">
+      <polygon stroke-width="6" fill="none" stroke="black" points="47.1,0.0 66.6,19.5 66.6,47.1 47.1,66.6 19.5,66.6 0.0,47.1 0.0,19.5 19.5,0.0"/>
+    </symbol>
+    <symbol id="SupportHoldUnit" viewBox="-5 -5 86.6 86.6" overflow="visible">
+      <polygon stroke-width="6" fill="none" stroke-dasharray="5,5" points="54.2,0.0 76.6,22.4 76.6,54.2 54.2,76.6 22.4,76.6 0.0,54.2 0.0,22.4 22.4,0.0"/>
+    </symbol>
+    <symbol id="ConvoyTriangle" viewBox="-9 -10 84.4 72.4" overflow="visible">
+      <polygon stroke-width="6" fill="none" stroke-dasharray="15,5" points="33.2,0.0 66.4,57.4 0.0,57.4"/>
+    </symbol>
+    <symbol id="BuildUnit" viewBox="-23.5 -23.5 153 153" overflow="visible">
+      <circle cx="50" cy="50" r="40" stroke="yellow" stroke-width="7" fill="none"/>
+    </symbol>
+    <symbol id="RemoveUnit" viewBox="-2.5 -2.5 15.5 15.5" overflow="visible">
+      <g stroke="red" stroke-width="1" fill="none">
+        <circle cx="5" cy="5" r="7"/>
+        <line x1="-2" y1="-2" x2="12" y2="12"/>
+        <line x1="-2" y1="12" x2="12" y2="-2"/>
+      </g>
+    </symbol>
+    <symbol id="WaivedBuild" viewBox="0 0 100 100" overflow="visible">
+      <polygon stroke="black" stroke-width="0.5" fill="yellow" points="40,100 100,35 90,20 40,85 13,65 10,70"/>
+    </symbol>
+    <symbol id="FailedOrder" viewBox="0 0 35 35" overflow="visible">
+      <polygon stroke="black" fill="red" stroke-width="3%" fill-opacity="1" points="0,0 12,0 17,6 22,0 35,0 22,17 32,34 19,34 15,27 9,34 -4,34 10,17"/>
+    </symbol>
+    <symbol id="SupplyCenter" viewBox="-0.375 -0.375 10.75 10.75" overflow="visible">
+      <g>
+        <circle cx="5" cy="5" r="3" stroke="black" stroke-width="0.4"/>
+        <circle cx="5" cy="5" r="5" stroke-width="0.75" stroke="black" fill="none"/>
+      </g>
+    </symbol>
+  </defs>
+
+  <g id="MapLayer">
+    <rect x="0" y="0" width="1000" height="750" fill="#f0eda8" stroke="black" stroke-width="3"/>
+
+    <path id="_aaa" class="nopower" d="M 327.9,205.0 327.9,295.0 250.0,340.0 172.1,295.0 172.1,205.0 250.0,160.0 z"/>
+    <path id="_aab" class="nopower" d="M 483.9,205.0 483.9,295.0 406.0,340.0 328.1,295.0 328.1,205.0 406.0,160.0 z"/>
+    <path id="_aac" class="nopower" d="M 639.9,205.0 639.9,295.0 562.0,340.0 484.1,295.0 484.1,205.0 562.0,160.0 z"/>
+    <path id="_aba" class="nopower" d="M 405.9,340.0 405.9,430.0 328.0,475.0 250.1,430.0 250.1,340.0 328.0,295.0 z"/>
+    <path id="_abb" class="nopower" d="M 561.9,340.0 561.9,430.0 484.0,475.0 406.1,430.0 406.1,340.0 484.0,295.0 z"/>
+    <path id="_abc" class="nopower" d="M 717.9,340.0 717.9,430.0 640.0,475.0 562.1,430.0 562.1,340.0 640.0,295.0 z"/>
+    <path id="_aca" class="nopower" d="M 483.9,475.0 483.9,565.0 406.0,610.0 328.1,565.0 328.1,475.0 406.0,430.0 z"/>
+    <path id="_acb" class="nopower" d="M 639.9,475.0 639.9,565.0 562.0,610.0 484.1,565.0 484.1,475.0 562.0,430.0 z"/>
+    <path id="_acc" class="nopower" d="M 795.9,475.0 795.9,565.0 718.0,610.0 640.1,565.0 640.1,475.0 718.0,430.0 z"/>
+  </g>
+
+  <g id="BriefLabelLayer" class="labeltext24">
+    <text x="250" y="255">AAA</text>
+    <text x="406" y="255">AAB</text>
+    <text x="562" y="255">AAC</text>
+    <text x="328" y="390">ABA</text>
+    <text x="484" y="390">ABB</text>
+    <text x="640" y="390">ABC</text>
+    <text x="406" y="525">ACA</text>
+    <text x="562" y="525">ACB</text>
+    <text x="718" y="525">ACC</text>
+  </g>
+
+  <text id="CurrentPhase" class="currentphasetext" x="40" y="80">S1901M</text>
+  <rect class="currentnoterect" x="20" y="620" width="960" height="90"/>
+  <text id="CurrentNote" class="currentnotetext" x="40" y="660"> </text>
+  <text id="CurrentNote2" class="currentnotetext" x="40" y="695"> </text>
+
+  <g id="OrderLayer"/>
+  <g id="UnitLayer"/>
+  <g id="DislodgedUnitLayer"/>
+
+  <g id="MouseLayer" class="invisibleContent">
+    <path id="aaa" d="M 327.9,205.0 327.9,295.0 250.0,340.0 172.1,295.0 172.1,205.0 250.0,160.0 z"/>
+    <path id="aab" d="M 483.9,205.0 483.9,295.0 406.0,340.0 328.1,295.0 328.1,205.0 406.0,160.0 z"/>
+    <path id="aac" d="M 639.9,205.0 639.9,295.0 562.0,340.0 484.1,295.0 484.1,205.0 562.0,160.0 z"/>
+    <path id="aba" d="M 405.9,340.0 405.9,430.0 328.0,475.0 250.1,430.0 250.1,340.0 328.0,295.0 z"/>
+    <path id="abb" d="M 561.9,340.0 561.9,430.0 484.0,475.0 406.1,430.0 406.1,340.0 484.0,295.0 z"/>
+    <path id="abc" d="M 717.9,340.0 717.9,430.0 640.0,475.0 562.1,430.0 562.1,340.0 640.0,295.0 z"/>
+    <path id="aca" d="M 483.9,475.0 483.9,565.0 406.0,610.0 328.1,565.0 328.1,475.0 406.0,430.0 z"/>
+    <path id="acb" d="M 639.9,475.0 639.9,565.0 562.0,610.0 484.1,565.0 484.1,475.0 562.0,430.0 z"/>
+    <path id="acc" d="M 795.9,475.0 795.9,565.0 718.0,610.0 640.1,565.0 640.1,475.0 718.0,430.0 z"/>
+  </g>
+</svg>

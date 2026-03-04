@@ -1,0 +1,47 @@
+BEGIN SPRING 1901 MOVEMENT
+
+AUSTRIA     (AUSTRIAN)     AAA
+A AAA
+
+ENGLAND     (ENGLISH)      AAB
+A AAB
+
+FRANCE      (FRENCH)       AAC
+A AAC
+
+GERMANY     (GERMAN)       ABA
+A ABA
+
+ITALY       (ITALIAN)      ABC
+A ABC
+
+RUSSIA      (RUSSIAN)      ACA
+A ACA
+
+TURKEY      (TURKISH)      ACC
+A ACC
+
+UNOWNED                     ABB ACB
+
+Hex Alpha Alpha             = aaa
+Hex Alpha Bravo             = aab
+Hex Alpha Charlie           = aac
+Hex Bravo Alpha             = aba
+Hex Bravo Bravo             = abb
+Hex Bravo Charlie           = abc
+Hex Charlie Alpha           = aca
+Hex Charlie Bravo           = acb
+Hex Charlie Charlie         = acc
+
+LAND     AAA        ABUTS    AAB ABA ABB
+LAND     AAB        ABUTS    AAA AAC ABA ABB ABC
+LAND     AAC        ABUTS    AAB ABB ABC
+
+LAND     ABA        ABUTS    AAA AAB ABB ACA ACB
+LAND     ABB        ABUTS    AAA AAB AAC ABA ABC ACA ACB ACC
+LAND     ABC        ABUTS    AAB AAC ABB ACB ACC
+
+LAND     ACA        ABUTS    ABA ABB ACB
+LAND     ACB        ABUTS    ABA ABB ABC ACA ACC
+LAND     ACC        ABUTS    ABB ABC ACB
+
