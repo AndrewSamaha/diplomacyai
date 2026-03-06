@@ -53,6 +53,8 @@
       further game creation requests. If 0, no limit. (default 0)
     - **remove_canceled_games**: (bool) indicate if games must be deleted from server database
       when they are canceled (default False)
+    - **bot_dispatch_allowed_root_maps**: (list[str]) root map names allowed for private-bot
+      dummy power dispatch (default ['standard'])
 
 """
 import atexit
@@ -198,7 +200,8 @@ class Server:
     __slots__ = ['data_path', 'games_path', 'available_maps', 'maps_mtime', 'notifications',
                  'games_scheduler', 'allow_registrations', 'max_games', 'remove_canceled_games', 'users', 'games',
                  'daide_servers', 'backup_server', 'backup_games', 'backup_delay_seconds', 'ping_seconds',
-                 'interruption_handler', 'backend', 'games_with_dummy_powers', 'dispatched_dummy_powers']
+                 'interruption_handler', 'backend', 'games_with_dummy_powers', 'dispatched_dummy_powers',
+                 'bot_dispatch_allowed_root_maps']
 
     # Servers cache.
     __cache__ = {}  # {absolute path of working folder => Server}
@@ -245,6 +248,7 @@ class Server:
         self.allow_registrations = True
         self.max_games = 0
         self.remove_canceled_games = False
+        self.bot_dispatch_allowed_root_maps = ['standard']
         self.backup_delay_seconds = constants.DEFAULT_BACKUP_DELAY_SECONDS
         self.ping_seconds = constants.DEFAULT_PING_SECONDS
         self.users = None  # type: Users  # Users and administrators usernames.
@@ -274,6 +278,9 @@ class Server:
         self.allow_registrations = bool(kwargs.pop(strings.ALLOW_REGISTRATIONS, self.allow_registrations))
         self.max_games = int(kwargs.pop(strings.MAX_GAMES, self.max_games))
         self.remove_canceled_games = bool(kwargs.pop(strings.REMOVE_CANCELED_GAMES, self.remove_canceled_games))
+        self.bot_dispatch_allowed_root_maps = self._normalize_root_maps_allowlist(
+            kwargs.pop(strings.BOT_DISPATCH_ALLOWED_ROOT_MAPS, self.bot_dispatch_allowed_root_maps)
+        )
         self.backup_delay_seconds = int(kwargs.pop(strings.BACKUP_DELAY_SECONDS, self.backup_delay_seconds))
         self.ping_seconds = int(kwargs.pop(strings.PING_SECONDS, self.ping_seconds))
         assert not kwargs
@@ -332,6 +339,9 @@ class Server:
             self.ping_seconds = server_info[strings.PING_SECONDS]
             self.max_games = server_info[strings.MAX_GAMES]
             self.remove_canceled_games = server_info[strings.REMOVE_CANCELED_GAMES]
+            self.bot_dispatch_allowed_root_maps = self._normalize_root_maps_allowlist(
+                server_info.get(strings.BOT_DISPATCH_ALLOWED_ROOT_MAPS, ['standard'])
+            )
             self.users = Users.from_dict(server_info[strings.USERS])
             self.available_maps = server_info[strings.AVAILABLE_MAPS]
             self.maps_mtime = server_info[strings.MAPS_MTIME]
@@ -539,10 +549,33 @@ class Server:
             strings.PING_SECONDS: self.ping_seconds,
             strings.MAX_GAMES: self.max_games,
             strings.REMOVE_CANCELED_GAMES: self.remove_canceled_games,
+            strings.BOT_DISPATCH_ALLOWED_ROOT_MAPS: self.bot_dispatch_allowed_root_maps,
             strings.USERS: self.users.to_dict(),
             strings.AVAILABLE_MAPS: self.available_maps,
             strings.MAPS_MTIME: self.maps_mtime,
         }
+
+    @staticmethod
+    def _normalize_root_maps_allowlist(value):
+        """Normalize root map allowlist for bot dispatch."""
+        if isinstance(value, str):
+            raw_values = [value]
+        elif value is None:
+            raw_values = []
+        else:
+            raw_values = list(value)
+        normalized = []
+        for map_name in raw_values:
+            if not isinstance(map_name, str):
+                continue
+            stripped = map_name.strip().lower()
+            if stripped and stripped not in normalized:
+                normalized.append(stripped)
+        return normalized or ['standard']
+
+    def _is_bot_dispatch_map_allowed(self, root_map_name):
+        """Return True if bot dispatch is enabled for given root map name."""
+        return str(root_map_name).strip().lower() in self.bot_dispatch_allowed_root_maps
 
     def save_game(self, server_game):
         """ Update on-memory version of given server game.
@@ -560,8 +593,8 @@ class Server:
             :param server_game: server game to check
             :type server_game: ServerGame
         """
-        if server_game.map.root_map != 'standard':
-            # Bot does not currently support other maps.
+        if not self._is_bot_dispatch_map_allowed(server_game.map.root_map):
+            # Bot dispatch is restricted to allow-listed root maps.
             return
         dummy_power_names = []
         if server_game.is_game_active or server_game.is_game_paused:

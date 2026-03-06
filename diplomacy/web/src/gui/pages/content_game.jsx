@@ -45,6 +45,7 @@ import {Game} from '../../diplomacy/engine/game';
 import {PowerOrdersActionBar} from "../components/power_orders_actions_bar";
 import {SvgStandard} from "../maps/standard/SvgStandard";
 import {SvgAncMed} from "../maps/ancmed/SvgAncMed";
+import {SvgHex3x3} from "../maps/hex3x3/SvgHex3x3";
 import {SvgModern} from "../maps/modern/SvgModern";
 import {SvgPure} from "../maps/pure/SvgPure";
 import {MapData} from "../utils/map_data";
@@ -82,6 +83,7 @@ const PRETTY_ROLES = {
 
 const MAP_COMPONENTS = {
     ancmed: SvgAncMed,
+    hex3x3: SvgHex3x3,
     standard: SvgStandard,
     modern: SvgModern,
     pure: SvgPure

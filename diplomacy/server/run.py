@@ -39,6 +39,6 @@ if __name__ == '__main__':
     ARGS = PARSER.parse_args()
 
     try:
-        Server().start(port=ARGS.port)
+        Server(bot_dispatch_allowed_root_maps=['standard', 'hex3x3']).start(port=ARGS.port)
     except KeyboardInterrupt:
         print('Keyboard interruption.')

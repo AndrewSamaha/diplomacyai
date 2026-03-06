@@ -60,4 +60,8 @@ export const Maps = [
     ]),
     new MapInfo('modern', 'Modern'),
     new MapInfo('pure', 'Pure'),
+    new MapInfo('hex3x3', 'Hex 3x3', [
+        new VariantInfo('hex3x3', 'Default'),
+        new VariantInfo('hex3x3_france_austria', 'France vs Austria')
+    ]),
 ];

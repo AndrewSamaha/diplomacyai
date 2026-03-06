@@ -113,7 +113,6 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
                 "phase": game.get_current_phase(),
                 "power_name": power_name,
                 "orderable_locations": orderable_locations,
-                "possible_orders": possible_orders_list,
                 "units_by_power": {
                     power.name: list(power.units) for power in game.powers.values()
                 },
@@ -139,6 +138,7 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
                 "crew_name": crew_name,
                 "game_snapshot": game_snapshot,
                 "position_metrics": position_metrics,
+                "possible_orders": possible_orders_list,
                 "validation_feedback": None,
                 "previous_orders": None,
                 "phase": game.get_current_phase(),
