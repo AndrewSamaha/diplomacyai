@@ -12,6 +12,7 @@ def build_pick_best_orders_crew(tools, taunt_tools=None) -> Crew:
             "Assess the current game state from the perspective of {power_name}.\n\n"
             "Context you MUST use:\n"
             "- game_snapshot: {game_snapshot}\n"
+            "- possible_orders: {possible_orders}\n"
             "- position_metrics: {position_metrics}\n\n"
             "Optional context:\n"
             "- validation_feedback: {validation_feedback}\n"
@@ -40,7 +41,8 @@ def build_pick_best_orders_crew(tools, taunt_tools=None) -> Crew:
     pick_the_best_orders_task = Task(
         description=(
             "Select the best legal orders for {power_name} based on the strategic "
-            "assessment provided in your context.\n\n"
+            "assessment provided in your context from this list: {possible_orders}\n\n"
+            "Those are the only orders available -- select orders from the list ONLY.\n"
             "Balance guarding against threats while pursuing expansion opportunities.\n"
             "If validation_feedback is provided, fix only the invalid orders:\n"
             "- validation_feedback: {validation_feedback}\n"
