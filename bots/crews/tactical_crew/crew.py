@@ -34,7 +34,8 @@ def build_tactical_crew(tools=None) -> Crew:
             "{\n"
             "  \"power_name\": \"{power_name}\",\n"
             "  \"annotations\": [\"...\"],\n"
-            "  \"include_non_moves\": false,\n"
+            "  \"include_non_moves\": true,\n"
+            "  \"beam_width\": 32,\n"
             "  \"selection_instructions\": [\"...\"],\n"
             "  \"tie_break_rules\": [\"...\"]\n"
             "}\n\n"
@@ -71,28 +72,28 @@ def build_tactical_crew(tools=None) -> Crew:
     choose_best_tactical_move_task = Task(
         description=(
             "Read the previous task output JSON and follow it strictly.\n"
-            "Then call `get_tactical_move_annotations` exactly once with:\n"
+            "Then call `get_tactical_order_bundle` exactly once with:\n"
             "- power_name\n"
             "- annotations\n"
             "- include_non_moves\n\n"
+            "- beam_width\n\n"
             "Use BOTH:\n"
-            "1) the tool output (`possible_moves` with metrics/ranks), and\n"
+            "1) the tool output (`recommended_orders` and bundle scoring), and\n"
             "2) `selection_instructions` and `tie_break_rules` from previous task\n"
-            "to choose ONE best legal move for {power_name}.\n\n"
+            "to finalize one legal order per orderable location for {power_name}.\n\n"
             "Output must be only JSON with shape:\n"
             "{\n"
             "  \"power_name\": \"{power_name}\",\n"
-            "  \"best_move\": \"<single legal move order>\",\n"
-            "  \"orders\": [\"<single legal move order>\"],\n"
-            "  \"selection_summary\": \"<2-3 sentences citing used metrics>\"\n"
+            "  \"orders\": [\"<legal order>\", \"...\"],\n"
+            "  \"selection_summary\": \"<2-3 sentences citing used metrics and bundle score>\"\n"
             "}\n\n"
             "Hard constraints:\n"
-            "- best_move must come directly from tool output.\n"
-            "- Return exactly one order in `orders`.\n"
+            "- Use `recommended_orders` as the baseline unless a deterministic tie-break rule requires adjustment.\n"
+            "- Return one order per orderable location.\n"
             "- Do not output markdown, bullets, or extra keys."
         ),
         expected_output=(
-            "A JSON object containing one selected legal move and a short metric-based summary."
+            "A JSON object containing a legal full order set and a short metric-based summary."
         ),
         agent=tactical_move_selector,
         context=[plan_tactical_query_task],
