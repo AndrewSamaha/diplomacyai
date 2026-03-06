@@ -7,14 +7,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from langfuse import propagate_attributes
+from bots.crews.adapters import (
+    CREW_PICK_BEST,
+    DEFAULT_CREW,
+    NOCREW_RANDOM,
+    build_crew,
+    is_no_crew_strategy,
+)
 from bots.instrumentation import init_langfuse_tracing
 from bots.utils.crew_output import extract_orders, serialize_for_trace
-
-
-CREW_RANDOM = "random_orders_crew"
-CREW_PICK_BEST = "pick_best_orders_crew"
-CREW_EZRA = "ezra_crew"
-NOCREW_RANDOM = "nocrew_random"
 
 POWER_TO_CREW = {
     "AUSTRIA": NOCREW_RANDOM,
@@ -26,8 +27,6 @@ POWER_TO_CREW = {
     "FRANCE": CREW_PICK_BEST,
 }
 
-DEFAULT_CREW = CREW_RANDOM
-
 MAX_VALIDATION_RETRIES = 2
 
 
@@ -36,12 +35,8 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
     from diplomacy.client.connection import connect
     from diplomacy.utils import constants
 
-    from bots.crews.pick_best_orders_crew import build_pick_best_orders_crew
-    from bots.crews.random_orders_crew import build_random_orders_crew
-    from bots.crews.ezra_crew import build_ezra_crew
     from bots.tools.get_position_metrics import GetPositionMetricsTool
     from bots.tools.move_validation import validate_orders
-    from bots.tools.send_message import SendGlobalMessageTool
     from bots.utils.game_state import get_human_controlled_powers, get_recent_messages, format_messages_for_context
     from bots.utils.random_orders import get_random_orders
 
@@ -83,26 +78,19 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
             message_queue = []
             crew_name = POWER_TO_CREW.get(power_name, DEFAULT_CREW)
 
-            if crew_name == NOCREW_RANDOM:
+            if is_no_crew_strategy(crew_name):
                 orders = get_random_orders(game, power_name)
                 print(f"  {power_name} ({game.get_current_phase()} | {crew_name}): {orders}")
                 await game.set_orders(power_name=power_name, orders=orders, wait=False)
                 continue
 
-            tools = []
-            taunt_tools = []
-
-            if crew_name in (CREW_PICK_BEST, CREW_EZRA) and taunt_target:
-                taunt_tools = [SendGlobalMessageTool(power_name=power_name, message_queue=message_queue)]
-
-            if crew_name == CREW_RANDOM:
-                crew = build_random_orders_crew(tools=tools)
-            elif crew_name == CREW_PICK_BEST:
-                crew = build_pick_best_orders_crew(tools=tools, taunt_tools=taunt_tools)
-            elif crew_name == CREW_EZRA:
-                crew = build_ezra_crew(tools=tools, taunt_tools=taunt_tools)
-            else:
-                crew = build_random_orders_crew(tools=tools)
+            crew = build_crew(
+                crew_name,
+                game=game,
+                power_name=power_name,
+                message_queue=message_queue,
+                taunt_target=taunt_target,
+            )
 
             possible_orders = game.get_all_possible_orders()
             possible_orders_list = [
