@@ -69,3 +69,66 @@ def test_select_best_order_bundle_is_deterministic():
 
     assert first["recommended_orders"] == second["recommended_orders"]
     assert first["bundle_score"] == second["bundle_score"]
+
+
+def test_select_best_order_bundle_resolves_self_conflict_moves():
+    result = select_best_order_bundle(
+        power_name="FRANCE",
+        possible_orders=[
+            {"location": "AAB", "orders": ["A AAB - ABB"]},
+            {"location": "ABA", "orders": ["A ABA - ABB"]},
+        ],
+        units_by_power={"FRANCE": ["A AAB", "A ABA"], "AUSTRIA": ["A ABC"]},
+        centers_by_power={"FRANCE": ["AAB", "ABA"], "AUSTRIA": ["ABC"]},
+        loc_abut=_hex3x3_loc_abut(),
+        supply_centers=["AAA", "AAB", "AAC", "ABA", "ABB", "ABC", "ACA", "ACB", "ACC"],
+        beam_width=8,
+        include_non_moves=True,
+    )
+
+    assert result["recommended_orders"] == ["A AAB - ABB", "A ABA - ABB"]
+    assert result["resolved_orders"] == ["A AAB H", "A ABA H"]
+    assert result["resolution_metadata"]["n_self_bounced_moves"] == 2
+    assert len(result["resolution_metadata"]["self_conflict_groups"]) == 1
+    assert result["score_breakdown"]["destination_conflict_penalty"] == 0.0
+
+
+def test_select_best_order_bundle_prefers_non_conflicting_bundle():
+    result = select_best_order_bundle(
+        power_name="FRANCE",
+        possible_orders=[
+            {"location": "AAB", "orders": ["A AAB - ABB", "A AAB - AAC"]},
+            {"location": "ABA", "orders": ["A ABA - ABB", "A ABA - ACA"]},
+        ],
+        units_by_power={"FRANCE": ["A AAB", "A ABA"], "AUSTRIA": ["A ABC"]},
+        centers_by_power={"FRANCE": ["AAB", "ABA"], "AUSTRIA": ["ABC"]},
+        loc_abut=_hex3x3_loc_abut(),
+        supply_centers=["AAA", "AAB", "AAC", "ABA", "ABB", "ABC", "ACA", "ACB", "ACC"],
+        beam_width=16,
+        include_non_moves=True,
+    )
+
+    destinations = [order.split(" - ")[1] for order in result["recommended_orders"] if " - " in order]
+    assert len(destinations) == len(set(destinations))
+    assert result["resolution_metadata"]["n_self_bounced_moves"] == 0
+
+
+def test_select_best_order_bundle_mixed_conflict_and_non_conflict_moves():
+    result = select_best_order_bundle(
+        power_name="FRANCE",
+        possible_orders=[
+            {"location": "AAB", "orders": ["A AAB - ACC"]},
+            {"location": "ABA", "orders": ["A ABA - ACC"]},
+            {"location": "AAA", "orders": ["A AAA - AAB"]},
+        ],
+        units_by_power={"FRANCE": ["A AAB", "A ABA", "A AAA"], "AUSTRIA": ["A ABC"]},
+        centers_by_power={"FRANCE": ["AAB", "ABA", "AAA"], "AUSTRIA": ["ABC"]},
+        loc_abut=_hex3x3_loc_abut(),
+        supply_centers=["AAA", "AAB", "AAC", "ABA", "ABB", "ABC", "ACA", "ACB", "ACC"],
+        beam_width=8,
+        include_non_moves=True,
+    )
+
+    assert result["recommended_orders"] == ["A AAA - AAB", "A AAB - ACC", "A ABA - ACC"]
+    assert result["resolved_orders"] == ["A AAA - AAB", "A AAB H", "A ABA H"]
+    assert result["resolution_metadata"]["n_self_bounced_moves"] == 2

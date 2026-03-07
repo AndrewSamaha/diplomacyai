@@ -4,6 +4,7 @@ from bots.utils.tactical.base_location import base_location
 from bots.utils.tactical.move_destination import move_destination
 from bots.utils.tactical.neighbors_for import neighbors_for
 from bots.utils.tactical.order_source_location import order_source_location
+from bots.utils.tactical.resolve_bundle_self_conflicts import resolve_bundle_self_conflicts
 
 
 def estimate_bundle_score(
@@ -14,8 +15,8 @@ def estimate_bundle_score(
     centers_by_power: dict[str, list[str]],
     loc_abut: dict[str, list[str]],
     supply_centers: list[str] | None = None,
-) -> tuple[float, dict[str, float]]:
-    """Return (score, breakdown) for a full list of selected orders."""
+) -> tuple[float, dict[str, float], dict[str, object]]:
+    """Return (score, breakdown, resolution) for a full list of selected orders."""
     me = power_name.upper()
 
     enemy_units: set[str] = set()
@@ -35,11 +36,14 @@ def estimate_bundle_score(
         for center in centers:
             center_owner[base_location(center)] = owner.upper()
 
+    resolution = resolve_bundle_self_conflicts(orders)
+    effective_orders = [str(order) for order in resolution["effective_orders"]]
+
     base_total = 0.0
     move_destinations: list[str] = []
     move_sources: list[str] = []
 
-    for order in orders:
+    for order in effective_orders:
         annotation = annotation_by_order.get(order, {})
         metrics = annotation.get("metrics")
         if isinstance(metrics, dict) and "net_score" in metrics:
@@ -57,7 +61,7 @@ def estimate_bundle_score(
     destination_counts: dict[str, int] = {}
     for dst in move_destinations:
         destination_counts[dst] = destination_counts.get(dst, 0) + 1
-    destination_conflict_penalty = sum(max(count - 1, 0) * 2.0 for count in destination_counts.values())
+    destination_conflict_penalty = 0.0
 
     capture_bonus = 0.0
     for dst in set(move_destinations):
@@ -91,4 +95,4 @@ def estimate_bundle_score(
         "exposure_penalty": round(exposure_penalty, 6),
         "total": round(total, 6),
     }
-    return total, breakdown
+    return total, breakdown, resolution

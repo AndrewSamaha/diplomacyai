@@ -90,15 +90,21 @@ def select_best_order_bundle(
     if not beam:
         return {
             "recommended_orders": [],
+            "resolved_orders": [],
+            "resolution_metadata": {
+                "per_order": [],
+                "self_conflict_groups": [],
+                "n_self_bounced_moves": 0,
+            },
             "bundle_score": 0.0,
             "score_breakdown": {"total": 0.0},
             "evaluated_bundles": 0,
             "beam_width": beam_width,
         }
 
-    finalists: list[tuple[float, dict[str, float], list[str]]] = []
+    finalists: list[tuple[float, dict[str, float], dict[str, object], list[str]]] = []
     for orders in beam:
-        score, breakdown = estimate_bundle_score(
+        score, breakdown, resolution = estimate_bundle_score(
             power_name=power_name,
             orders=orders,
             annotation_by_order=annotation_by_order,
@@ -107,13 +113,19 @@ def select_best_order_bundle(
             loc_abut=loc_abut,
             supply_centers=supply_centers,
         )
-        finalists.append((score, breakdown, orders))
+        finalists.append((score, breakdown, resolution, orders))
 
-    finalists.sort(key=lambda item: (-item[0], tuple(item[2])))
-    best_score, best_breakdown, best_orders = finalists[0]
+    finalists.sort(key=lambda item: (-item[0], tuple(item[3])))
+    best_score, best_breakdown, best_resolution, best_orders = finalists[0]
 
     return {
         "recommended_orders": best_orders,
+        "resolved_orders": best_resolution["effective_orders"],
+        "resolution_metadata": {
+            "per_order": best_resolution["per_order"],
+            "self_conflict_groups": best_resolution["self_conflict_groups"],
+            "n_self_bounced_moves": best_resolution["n_self_bounced_moves"],
+        },
         "bundle_score": round(best_score, 6),
         "score_breakdown": best_breakdown,
         "evaluated_bundles": len(finalists),

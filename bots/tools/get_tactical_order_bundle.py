@@ -115,6 +115,8 @@ class GetTacticalOrderBundleTool(BaseTool):
                 "available_annotations": AVAILABLE_ANNOTATIONS,
                 "beam_width": int(beam_width),
                 "recommended_orders": bundle["recommended_orders"],
+                "resolved_orders": bundle["resolved_orders"],
+                "resolution_metadata": bundle["resolution_metadata"],
                 "bundle_score": bundle["bundle_score"],
                 "score_breakdown": bundle["score_breakdown"],
                 "evaluated_bundles": bundle["evaluated_bundles"],
