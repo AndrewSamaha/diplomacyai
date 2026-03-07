@@ -94,7 +94,9 @@ def select_best_order_bundle(
             "resolution_metadata": {
                 "per_order": [],
                 "self_conflict_groups": [],
+                "friendly_occupied_conflicts": [],
                 "n_self_bounced_moves": 0,
+                "resolver_iterations": 0,
             },
             "bundle_score": 0.0,
             "score_breakdown": {"total": 0.0},
@@ -124,7 +126,9 @@ def select_best_order_bundle(
         "resolution_metadata": {
             "per_order": best_resolution["per_order"],
             "self_conflict_groups": best_resolution["self_conflict_groups"],
+            "friendly_occupied_conflicts": best_resolution["friendly_occupied_conflicts"],
             "n_self_bounced_moves": best_resolution["n_self_bounced_moves"],
+            "resolver_iterations": best_resolution["resolver_iterations"],
         },
         "bundle_score": round(best_score, 6),
         "score_breakdown": best_breakdown,

@@ -70,6 +70,7 @@ def test_tool_returns_full_orders_and_bundle_metadata():
     assert payload["beam_width"] == 16
     assert "total" in payload["score_breakdown"]
     assert "n_self_bounced_moves" in payload["resolution_metadata"]
+    assert "friendly_occupied_conflicts" in payload["resolution_metadata"]
 
 
 def test_tool_returns_error_for_bad_annotation_or_power():
