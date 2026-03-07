@@ -9,6 +9,7 @@ load_dotenv()
 from langfuse import propagate_attributes
 from bots.crews.adapters import (
     CREW_PICK_BEST,
+    CREW_TACTICAL,
     DEFAULT_CREW,
     NOCREW_RANDOM,
     build_crew,
@@ -18,7 +19,7 @@ from bots.instrumentation import init_langfuse_tracing
 from bots.utils.crew_output import extract_orders, serialize_for_trace
 
 POWER_TO_CREW = {
-    "AUSTRIA": NOCREW_RANDOM,
+    "AUSTRIA": CREW_TACTICAL,
     "ENGLAND": NOCREW_RANDOM,
     "GERMANY": NOCREW_RANDOM,
     "RUSSIA": NOCREW_RANDOM,
