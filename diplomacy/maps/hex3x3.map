@@ -33,15 +33,15 @@ Hex Charlie Alpha           = aca
 Hex Charlie Bravo           = acb
 Hex Charlie Charlie         = acc
 
-LAND     AAA        ABUTS    AAB ABA ABB
-LAND     AAB        ABUTS    AAA AAC ABA ABB ABC
+LAND     AAA        ABUTS    AAB ABA
+LAND     AAB        ABUTS    AAA AAC ABA ABB
 LAND     AAC        ABUTS    AAB ABB ABC
 
-LAND     ABA        ABUTS    AAA AAB ABB ACA ACB
-LAND     ABB        ABUTS    AAA AAB AAC ABA ABC ACA ACB ACC
-LAND     ABC        ABUTS    AAB AAC ABB ACB ACC
+LAND     ABA        ABUTS    AAA AAB ABB ACA
+LAND     ABB        ABUTS    AAB AAC ABA ABC ACA ACB
+LAND     ABC        ABUTS    AAC ABB ACB ACC
 
 LAND     ACA        ABUTS    ABA ABB ACB
-LAND     ACB        ABUTS    ABA ABB ABC ACA ACC
-LAND     ACC        ABUTS    ABB ABC ACB
+LAND     ACB        ABUTS    ABB ABC ACA ACC
+LAND     ACC        ABUTS    ABC ACB
 
