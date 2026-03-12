@@ -47,6 +47,7 @@ def test_select_best_order_bundle_returns_full_order_set():
     assert isinstance(result["bundle_score"], float)
     assert result["evaluated_bundles"] >= 1
     assert "total" in result["score_breakdown"]
+    assert len(result["candidate_bundles"]) >= 1
 
 
 def test_select_best_order_bundle_is_deterministic():

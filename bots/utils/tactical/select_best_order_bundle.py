@@ -102,6 +102,7 @@ def select_best_order_bundle(
             "score_breakdown": {"total": 0.0},
             "evaluated_bundles": 0,
             "beam_width": beam_width,
+            "candidate_bundles": [],
         }
 
     finalists: list[tuple[float, dict[str, float], dict[str, object], list[str]]] = []
@@ -120,6 +121,38 @@ def select_best_order_bundle(
     finalists.sort(key=lambda item: (-item[0], tuple(item[3])))
     best_score, best_breakdown, best_resolution, best_orders = finalists[0]
 
+    candidate_bundles: list[dict[str, object]] = []
+    for idx, (score, breakdown, resolution, orders) in enumerate(finalists, start=1):
+        per_order_annotations: list[dict[str, object]] = []
+        for order in orders:
+            annotation = annotation_by_order.get(order, {})
+            metrics = annotation.get("metrics", {})
+            per_order_annotations.append(
+                {
+                    "order": order,
+                    "metrics": metrics if isinstance(metrics, dict) else {},
+                }
+            )
+
+        candidate_bundles.append(
+            {
+                "bundle_id": f"bundle_{idx}",
+                "bundle_rank": idx,
+                "intended_orders": list(orders),
+                "resolved_orders": list(resolution["effective_orders"]),
+                "bundle_score": round(float(score), 6),
+                "score_breakdown": breakdown,
+                "resolution_metadata": {
+                    "per_order": resolution["per_order"],
+                    "self_conflict_groups": resolution["self_conflict_groups"],
+                    "friendly_occupied_conflicts": resolution["friendly_occupied_conflicts"],
+                    "n_self_bounced_moves": resolution["n_self_bounced_moves"],
+                    "resolver_iterations": resolution["resolver_iterations"],
+                },
+                "order_annotations": per_order_annotations,
+            }
+        )
+
     return {
         "recommended_orders": best_orders,
         "resolved_orders": best_resolution["effective_orders"],
@@ -134,4 +167,5 @@ def select_best_order_bundle(
         "score_breakdown": best_breakdown,
         "evaluated_bundles": len(finalists),
         "beam_width": beam_width,
+        "candidate_bundles": candidate_bundles,
     }

@@ -5,7 +5,7 @@ from crewai.tools import BaseTool
 from pydantic import BaseModel, Field, PrivateAttr
 
 from bots.tools.get_tactical_move_annotations import AVAILABLE_ANNOTATIONS
-from bots.utils.tactical import select_best_order_bundle
+from bots.utils.tactical import select_best_order_bundle, write_bundle_candidates_csv
 
 
 class TacticalOrderBundleInput(BaseModel):
@@ -106,19 +106,35 @@ class GetTacticalOrderBundleTool(BaseTool):
             include_non_moves=include_non_moves,
         )
 
+        phase = self._game.get_current_phase()
+        game_name = (
+            getattr(self._game, "game_id", None)
+            or getattr(self._game, "name", None)
+            or getattr(self._game, "map_name", None)
+            or "unknown_game"
+        )
+        csv_path = write_bundle_candidates_csv(
+            game_name=str(game_name),
+            phase=str(phase),
+            power_name=normalized_power,
+            selected_annotations=selected_annotations,
+            candidate_bundles=bundle.get("candidate_bundles", []),
+        )
+
         return json.dumps(
             {
                 "power_name": normalized_power,
-                "phase": self._game.get_current_phase(),
+                "phase": phase,
                 "orderable_locations": orderable_locations,
                 "selected_annotations": selected_annotations,
                 "available_annotations": AVAILABLE_ANNOTATIONS,
                 "beam_width": int(beam_width),
-                "recommended_orders": bundle["recommended_orders"],
-                "resolved_orders": bundle["resolved_orders"],
+                "recommended_orders": bundle["resolved_orders"],
                 "resolution_metadata": bundle["resolution_metadata"],
                 "bundle_score": bundle["bundle_score"],
                 "score_breakdown": bundle["score_breakdown"],
                 "evaluated_bundles": bundle["evaluated_bundles"],
+                "candidate_bundles": bundle.get("candidate_bundles", []),
+                "bundle_csv_path": csv_path,
             }
         )
