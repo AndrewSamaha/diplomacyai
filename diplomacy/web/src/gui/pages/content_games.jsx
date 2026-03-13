@@ -43,11 +43,14 @@ export class ContentGames extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {tab: null};
+        this.state = {tab: null, showCompletedGames: false};
         this.changeTab = this.changeTab.bind(this);
+        this.toggleShowCompletedGames = this.toggleShowCompletedGames.bind(this);
         this.onFind = this.onFind.bind(this);
         this.onCreate = this.onCreate.bind(this);
         this.wrapGameData = this.wrapGameData.bind(this);
+        this.renderShowCompletedGamesCheckbox = this.renderShowCompletedGamesCheckbox.bind(this);
+        this.filterCompletedGames = this.filterCompletedGames.bind(this);
     }
 
     getPage() {
@@ -94,8 +97,31 @@ export class ContentGames extends React.Component {
         this.setState({tab: tabIndex});
     }
 
+    toggleShowCompletedGames(event) {
+        this.setState({showCompletedGames: event.target.checked});
+    }
+
     wrapGameData(gameData) {
         return new InlineGameView(this.getPage(), gameData, this.getPage().availableMaps);
+    }
+
+    filterCompletedGames(games) {
+        return this.state.showCompletedGames ? games : games.filter(game => game.status !== 'completed');
+    }
+
+    renderShowCompletedGamesCheckbox() {
+        return (
+            <div className={'form-check mb-3'}>
+                <input className={'form-check-input'}
+                       id={'show-completed-games'}
+                       type={'checkbox'}
+                       checked={this.state.showCompletedGames}
+                       onChange={this.toggleShowCompletedGames}/>
+                <label className={'form-check-label'} htmlFor={'show-completed-games'}>
+                    show completed games
+                </label>
+            </div>
+        );
     }
 
     gameCreationButton() {
@@ -123,10 +149,12 @@ export class ContentGames extends React.Component {
             ['load a game from disk', page.loadGameFromDisk],
             ['logout', page.logout]
         ];
-        const myGames = this.props.myGames;
-        const gamesFound = this.props.gamesFound;
+        const myGames = this.props.myGames.slice();
+        const gamesFound = this.props.gamesFound.slice();
         myGames.sort((a, b) => b.timestamp_created - a.timestamp_created);
         gamesFound.sort((a, b) => b.timestamp_created - a.timestamp_created);
+        const visibleMyGames = this.filterCompletedGames(myGames);
+        const visibleGamesFound = this.filterCompletedGames(gamesFound);
         const tab = this.state.tab ? this.state.tab : (myGames.length ? 'my-games' : 'find');
         return (
             <main>
@@ -140,14 +168,16 @@ export class ContentGames extends React.Component {
                     {tab === 'find' ? (
                         <Tab id="tab-games-find" display={true}>
                             <FindForm onSubmit={this.onFind}/>
+                            {this.renderShowCompletedGamesCheckbox()}
                             <Table className={"table table-striped"} caption={"Games"} columns={TABLE_LOCAL_GAMES}
-                                   data={gamesFound} wrapper={this.wrapGameData}/>
+                                   data={visibleGamesFound} wrapper={this.wrapGameData}/>
                         </Tab>
                     ) : ''}
                     {tab === 'my-games' ? (
                         <Tab id={'tab-my-games'} display={true}>
+                            {this.renderShowCompletedGamesCheckbox()}
                             <Table className={"table table-striped"} caption={"My games"} columns={TABLE_LOCAL_GAMES}
-                                   data={myGames} wrapper={this.wrapGameData}/>
+                                   data={visibleMyGames} wrapper={this.wrapGameData}/>
                         </Tab>
                     ) : ''}
                 </Tabs>
