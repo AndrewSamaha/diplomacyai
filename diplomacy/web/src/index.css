@@ -21,6 +21,7 @@
     --color-border-strong: black;
     --color-border-muted: silver;
     --color-border-attention: lightcoral;
+    --color-border-tab-active: white;
 
     --color-danger: red;
     --color-danger-soft-border: rgb(245, 205, 205);
@@ -127,11 +128,16 @@ span.dropdown-item {
 .tabs-bar.nav-tabs .nav-link {
     background-color: var(--color-tab-bg);
     color: var(--color-tab-text);
+    border: none;
 }
 
 .tabs-bar.nav-tabs .nav-link.active {
     background-color: var(--color-tab-bg-active);
     color: var(--color-tab-text);
+    border-top: 1px solid var(--color-border-tab-active);
+    border-right: 1px solid var(--color-border-tab-active);
+    border-left: 1px solid var(--color-border-tab-active);
+    border-bottom: none;
 }
 
 .top-msg {
