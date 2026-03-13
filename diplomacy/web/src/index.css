@@ -1,23 +1,148 @@
 /** Bootstrap. **/
 /** Common. **/
+:root {
+    /* color-picker: https://htmlcolorcodes.com/color-picker/ */
+    --color-brand: #3F74C4;
+
+    --color-bg-page: #1B3866;
+    --color-bg-surface: #1A3154;
+    --color-bg-surface-muted: rgb(244, 244, 245);
+    --color-bg-surface-subtle: rgb(248, 248, 248);
+    --color-bg-interactive-hover: rgb(245, 245, 245);
+    --color-bg-interactive-active: rgb(230, 230, 230);
+
+    --color-text-accent: #C48F3F;
+    --color-text-accent-secondary: #B7C43F;
+    --color-text-default: #EBF1F9;
+    --color-text-inverse: white;
+    --color-text-muted: #B9C7DD;
+    --color-text-subtle: #A5BEE3;
+
+    --color-border-strong: black;
+    --color-border-muted: silver;
+    --color-border-attention: lightcoral;
+
+    --color-danger: red;
+    --color-danger-soft-border: rgb(245, 205, 205);
+    --color-danger-soft-text: rgb(200, 120, 120);
+    --color-danger-soft-bg: rgba(255, 215, 215, 0.9);
+    --color-danger-message-border: rgb(240, 200, 200);
+    --color-danger-message-bg: rgb(255, 220, 220);
+
+    --color-info: blue;
+    --color-info-soft-border: rgb(245, 245, 205);
+    --color-info-soft-text: rgb(200, 200, 120);
+    --color-info-soft-bg: rgba(255, 255, 215, 0.9);
+
+    --color-success: green;
+    --color-success-soft-border: rgb(205, 245, 205);
+    --color-success-soft-text: rgb(120, 200, 120);
+    --color-success-soft-bg: rgba(215, 255, 215, 0.9);
+    --color-success-message-border: rgb(200, 240, 200);
+    --color-success-message-bg: rgb(220, 255, 220);
+
+    --color-warning: orange;
+
+    --color-message-sender-border: rgb(200, 200, 240);
+    --color-message-sender-bg: rgb(220, 220, 255);
+
+    --color-box-bar-bg: rgb(240, 240, 240);
+
+    --color-control-bg: var(--color-bg-surface);
+    --color-control-bg-hover: var(--color-bg-page);
+    --color-control-text: var(--color-text-accent);
+    --color-control-border: var(--color-border-muted);
+    --color-control-placeholder: var(--color-text-accent-secondary);
+
+    --color-dropdown-bg: var(--color-bg-surface);
+    --color-dropdown-text: var(--color-text-accent);
+    --color-dropdown-item-hover-bg: var(--color-bg-page);
+    --color-dropdown-item-hover-text: var(--color-text-accent);
+
+    --color-tab-bg: var(--color-bg-surface);
+    --color-tab-bg-active: var(--color-bg-page);
+    --color-tab-text: var(--color-text-accent);
+    --color-table-header-bg: var(--color-bg-surface);
+    --color-table-header-text: var(--color-text-accent);
+}
 
 body {
     overflow-y: scroll;
+    background-color: var(--color-bg-page);
+    color: var(--color-text-default);
 }
 
 span.dropdown-item {
     cursor: pointer;
 }
 
+.form-control,
+.custom-select {
+    background-color: var(--color-control-bg);
+    border-color: var(--color-control-border);
+    color: var(--color-control-text);
+}
+
+.form-control::placeholder {
+    color: var(--color-control-placeholder);
+}
+
+.form-control:focus,
+.custom-select:focus {
+    background-color: var(--color-control-bg);
+    border-color: var(--color-brand);
+    color: var(--color-control-text);
+    box-shadow: 0 0 0 0.2rem rgba(63, 116, 196, 0.25);
+}
+
+.custom-select option {
+    background-color: var(--color-dropdown-bg);
+    color: var(--color-dropdown-text);
+}
+
+.dropdown-menu {
+    background-color: var(--color-dropdown-bg);
+    border-color: var(--color-control-border);
+}
+
+.dropdown-item {
+    color: var(--color-dropdown-text);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--color-dropdown-item-hover-bg);
+    color: var(--color-dropdown-item-hover-text);
+}
+
+.table {
+    color: var(--color-text-default);
+}
+
+.table .thead-light th {
+    background-color: var(--color-table-header-bg);
+    color: var(--color-table-header-text);
+}
+
+.tabs-bar.nav-tabs .nav-link {
+    background-color: var(--color-tab-bg);
+    color: var(--color-tab-text);
+}
+
+.tabs-bar.nav-tabs .nav-link.active {
+    background-color: var(--color-tab-bg-active);
+    color: var(--color-tab-text);
+}
+
 .top-msg {
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid var(--color-border-strong);
     font-weight: bold;
     text-align: center;
     position: -webkit-sticky;
     position: sticky;
     top: 0;
     z-index: 1;
-    background-color: white;
+    background-color: var(--color-bg-page);
 }
 
 .top-msg .msg {
@@ -35,19 +160,19 @@ span.dropdown-item {
 }
 
 .top-msg .msg + .msg {
-    border-left: 1px solid black;
+    border-left: 1px solid var(--color-border-strong);
 }
 
 .top-msg .error {
-    color: red;
+    color: var(--color-danger);
 }
 
 .top-msg .info {
-    color: blue;
+    color: var(--color-info);
 }
 
 .top-msg .success {
-    color: green;
+    color: var(--color-success);
 }
 
 #past-map svg, #current-map svg, #messages-map svg {
@@ -57,13 +182,13 @@ span.dropdown-item {
 }
 
 .history-current-orders {
-    background-color: red;
-    color: white;
+    background-color: var(--color-danger);
+    color: var(--color-text-inverse);
     font-weight: bold;
     position: absolute;
     top: 0;
     right: 0;
-    border: 4px solid black;
+    border: 4px solid var(--color-border-strong);
     margin: 5px 24px;
     padding: 5px 10px 5px 10px;
 }
@@ -94,7 +219,7 @@ main {
 
 .power-name {
     font-weight: bold;
-    color: red;
+    color: var(--color-danger);
     text-align: center;
 }
 
@@ -106,7 +231,7 @@ span.power-name {
 }
 
 #current-power {
-    color: red;
+    color: var(--color-danger);
     font-weight: bold;
     text-align: center;
     display: inline-block;
@@ -136,21 +261,21 @@ span.power-name {
 }
 
 .page-message.error {
-    border-color: rgb(245, 205, 205);
-    background-color: rgba(255, 215, 215, 0.9);
-    color: rgb(200, 120, 120);
+    border-color: var(--color-danger-soft-border);
+    background-color: var(--color-danger-soft-bg);
+    color: var(--color-danger-soft-text);
 }
 
 .page-message.info {
-    border-color: rgb(245, 245, 205);
-    background-color: rgba(255, 255, 215, 0.9);
-    color: rgb(200, 200, 120);
+    border-color: var(--color-info-soft-border);
+    background-color: var(--color-info-soft-bg);
+    color: var(--color-info-soft-text);
 }
 
 .page-message.success {
-    border-color: rgb(205, 245, 205);
-    background-color: rgba(215, 255, 215, 0.9);
-    color: rgb(120, 200, 120);
+    border-color: var(--color-success-soft-border);
+    background-color: var(--color-success-soft-bg);
+    color: var(--color-success-soft-text);
 }
 
 .order-result {
@@ -158,11 +283,11 @@ span.power-name {
 }
 
 .order-result .bounce {
-    color: red;
+    color: var(--color-danger);
 }
 
 .order-result .success {
-    color: green;
+    color: var(--color-success);
 }
 
 .past-orders {
@@ -172,7 +297,7 @@ span.power-name {
 }
 
 .past-orders .row:nth-child(odd) {
-    background-color: rgb(244, 244, 245);
+    background-color: var(--color-bg-surface-muted);
 }
 
 .past-orders .row .past-power-name, .past-orders .row .past-power-orders {
@@ -193,7 +318,7 @@ span.power-name {
 }
 
 .page > main > .title {
-    border-bottom: 1px solid silver;
+    border-bottom: 1px solid var(--color-border-muted);
     padding-bottom: 10px;
     margin-bottom: 10px;
 }
@@ -216,30 +341,30 @@ span.power-name {
 
 .action .update {
     font-size: 0.8em;
-    color: white;
-    background-color: red;
+    color: var(--color-text-inverse);
+    background-color: var(--color-danger);
     display: inline-block;
     padding: 0 0.4em 0 0.4em;
     margin-left: 0.4em;
-    border: 1px solid lightcoral;
+    border: 1px solid var(--color-border-attention);
 }
 
 .orders, .game-messages {
     max-height: 500px;
     overflow: auto;
-    border: 1px solid silver;
+    border: 1px solid var(--color-border-muted);
     padding: 10px;
 }
 
 .panel-orders > .bar {
-    border-top: 1px solid silver;
-    border-left: 1px solid silver;
-    border-right: 1px solid silver;
+    border-top: 1px solid var(--color-border-muted);
+    border-left: 1px solid var(--color-border-muted);
+    border-right: 1px solid var(--color-border-muted);
 }
 
 .panel-orders .summary {
-    border-left: 1px solid silver;
-    border-right: 1px solid silver;
+    border-left: 1px solid var(--color-border-muted);
+    border-right: 1px solid var(--color-border-muted);
 }
 
 .panel-orders .summary > span + span:before {
@@ -247,18 +372,18 @@ span.power-name {
 }
 
 .fancy-box {
-    border: 1px solid silver;
+    border: 1px solid var(--color-border-muted);
     position: relative;
     margin: auto;
 }
 
 .fancy-box .fancy-bar {
-    background-color: rgb(240, 240, 240);
-    border-bottom: 1px solid silver;
+    background-color: var(--color-box-bar-bg);
+    border-bottom: 1px solid var(--color-border-muted);
 }
 
 .fancy-box .fancy-content {
-    background-color: white;
+    background-color: var(--color-bg-page);
 }
 
 .power-orders {
@@ -272,15 +397,15 @@ span.power-name {
 }
 
 .power-orders .no-orders {
-    color: lightgray;
+    color: var(--color-text-accent);
 }
 
 .power-orders .empty-orders {
-    color: gray;
+    color: var(--color-text-accent-secondary);
 }
 
 .power-orders .title {
-    background-color: rgb(230, 230, 235);
+    background-color: var(--color-bg-surface);
     padding: 10px;
     margin-bottom: 2px;
 }
@@ -291,7 +416,7 @@ span.power-name {
 
 .dummy, .neutral {
     font-style: italic;
-    color: gray;
+    color: var(--color-text-muted);
 }
 
 .controller {
@@ -300,17 +425,17 @@ span.power-name {
 
 .power-orders .title .wait, .wait, .no {
     font-weight: bold;
-    color: red;
+    color: var(--color-danger);
 }
 
 .power-orders .title .no-wait, .no-wait, .yes {
     font-weight: bold;
-    color: green;
+    color: var(--color-success);
 }
 
 .empty {
     font-weight: bold;
-    color: orange;
+    color: var(--color-warning);
 }
 
 .power-orders .title button {
@@ -327,11 +452,11 @@ span.power-name {
 }
 
 .power-orders .order-entry.server .order-mark {
-    color: red;
+    color: var(--color-danger);
 }
 
 .power-orders .entry-2 {
-    background-color: rgb(248, 248, 248);
+    background-color: var(--color-bg-surface-subtle);
 }
 
 .power-orders .order {
@@ -355,20 +480,20 @@ span.power-name {
 }
 
 .game-message.message-recipient {
-    border-color: rgb(240, 200, 200);
-    background-color: rgb(255, 220, 220);
+    border-color: var(--color-danger-message-border);
+    background-color: var(--color-danger-message-bg);
     cursor: pointer;
 }
 
 .game-message.message-recipient.message-read {
-    border-color: rgb(200, 240, 200);
-    background-color: rgb(220, 255, 220);
+    border-color: var(--color-success-message-border);
+    background-color: var(--color-success-message-bg);
     cursor: default;
 }
 
 .game-message.message-sender {
-    border-color: rgb(200, 200, 240);
-    background-color: rgb(220, 220, 255);
+    border-color: var(--color-message-sender-border);
+    background-color: var(--color-message-sender-bg);
     float: right;
 }
 
@@ -378,7 +503,7 @@ span.power-name {
 }
 
 .game-message-wrapper.other-phase {
-    color: rgb(140, 140, 140);
+    color: var(--color-text-subtle);
 }
 
 .game-message-wrapper + .game-message-wrapper {
@@ -390,7 +515,7 @@ span.power-name {
 }
 
 .button-server {
-    border: 1px solid silver;
+    border: 1px solid var(--color-border-muted);
     border-radius: 4px;
     padding: 5px;
     cursor: pointer;
@@ -398,11 +523,11 @@ span.power-name {
 }
 
 .button-server:hover {
-    background-color: rgb(245, 245, 245);
+    background-color: var(--color-bg-interactive-hover);
 }
 
 .button-server:active {
-    background-color: rgb(230, 230, 230);
+    background-color: var(--color-bg-interactive-active);
 }
 
 button .unroll {
