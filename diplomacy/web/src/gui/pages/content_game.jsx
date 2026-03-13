@@ -89,12 +89,28 @@ const MAP_COMPONENTS = {
     pure: SvgPure
 };
 
+const MAP_SCOPE_CLASSES = {
+    ancmed: 'SvgAncMed',
+    hex3x3: 'SvgHex3x3',
+    standard: 'SvgStandard',
+    modern: 'SvgModern',
+    pure: 'SvgPure'
+};
+
 function getMapComponent(mapName) {
     for (let rootMap of Object.keys(MAP_COMPONENTS)) {
         if (mapName.indexOf(rootMap) === 0)
             return MAP_COMPONENTS[rootMap];
     }
     throw new Error(`Un-implemented map: ${mapName}`);
+}
+
+function getMapScopeClass(mapName) {
+    for (let rootMap of Object.keys(MAP_SCOPE_CLASSES)) {
+        if (mapName.indexOf(rootMap) === 0)
+            return MAP_SCOPE_CLASSES[rootMap];
+    }
+    return '';
 }
 
 function noPromise() {
@@ -973,14 +989,17 @@ export class ContentGame extends React.Component {
     renderMapForResults(gameEngine, showOrders) {
         const Map = getMapComponent(gameEngine.map_name);
         return (
-            <div id="past-map" key="past-map">
-                <Map game={gameEngine}
-                     showAbbreviations={this.state.showAbbreviations}
-                     mapData={new MapData(this.getMapInfo(gameEngine.map_name), gameEngine)}
-                     onError={this.getPage().error}
-                     orders={(showOrders && gameEngine.order_history.contains(gameEngine.phase) && gameEngine.order_history.get(gameEngine.phase)) || null}
-                     onHover={showOrders ? this.displayLocationOrders : null}
-                     onSelectVia={this.onSelectVia}/>
+            <div className={'map-panel'}>
+                {this.renderMapLegend(gameEngine)}
+                <div id="past-map" key="past-map">
+                    <Map game={gameEngine}
+                         showAbbreviations={this.state.showAbbreviations}
+                         mapData={new MapData(this.getMapInfo(gameEngine.map_name), gameEngine)}
+                         onError={this.getPage().error}
+                         orders={(showOrders && gameEngine.order_history.contains(gameEngine.phase) && gameEngine.order_history.get(gameEngine.phase)) || null}
+                         onHover={showOrders ? this.displayLocationOrders : null}
+                         onSelectVia={this.onSelectVia}/>
+                </div>
             </div>
         );
     }
@@ -988,14 +1007,17 @@ export class ContentGame extends React.Component {
     renderMapForMessages(gameEngine, showOrders) {
         const Map = getMapComponent(gameEngine.map_name);
         return (
-            <div id="messages-map" key="messages-map">
-                <Map game={gameEngine}
-                     showAbbreviations={this.state.showAbbreviations}
-                     mapData={new MapData(this.getMapInfo(gameEngine.map_name), gameEngine)}
-                     onError={this.getPage().error}
-                     orders={(showOrders && gameEngine.order_history.contains(gameEngine.phase) && gameEngine.order_history.get(gameEngine.phase)) || null}
-                     onHover={showOrders ? this.displayLocationOrders : null}
-                     onSelectVia={this.onSelectVia}/>
+            <div className={'map-panel'}>
+                {this.renderMapLegend(gameEngine)}
+                <div id="messages-map" key="messages-map">
+                    <Map game={gameEngine}
+                         showAbbreviations={this.state.showAbbreviations}
+                         mapData={new MapData(this.getMapInfo(gameEngine.map_name), gameEngine)}
+                         onError={this.getPage().error}
+                         orders={(showOrders && gameEngine.order_history.contains(gameEngine.phase) && gameEngine.order_history.get(gameEngine.phase)) || null}
+                         onHover={showOrders ? this.displayLocationOrders : null}
+                         onSelectVia={this.onSelectVia}/>
+                </div>
             </div>
         );
     }
@@ -1012,17 +1034,40 @@ export class ContentGame extends React.Component {
             }
         }
         return (
-            <div id="current-map" key="current-map">
-                <Map game={gameEngine}
-                     showAbbreviations={this.state.showAbbreviations}
-                     mapData={new MapData(this.getMapInfo(gameEngine.map_name), gameEngine)}
-                     onError={this.getPage().error}
-                     orderBuilding={ContentGame.getOrderBuilding(powerName, orderType, orderPath)}
-                     onOrderBuilding={this.onOrderBuilding}
-                     onOrderBuilt={this.onOrderBuilt}
-                     orders={orders}
-                     onSelectLocation={this.onSelectLocation}
-                     onSelectVia={this.onSelectVia}/>
+            <div className={'map-panel'}>
+                {this.renderMapLegend(gameEngine)}
+                <div id="current-map" key="current-map">
+                    <Map game={gameEngine}
+                         showAbbreviations={this.state.showAbbreviations}
+                         mapData={new MapData(this.getMapInfo(gameEngine.map_name), gameEngine)}
+                         onError={this.getPage().error}
+                         orderBuilding={ContentGame.getOrderBuilding(powerName, orderType, orderPath)}
+                         onOrderBuilding={this.onOrderBuilding}
+                         onOrderBuilt={this.onOrderBuilt}
+                         orders={orders}
+                         onSelectLocation={this.onSelectLocation}
+                         onSelectVia={this.onSelectVia}/>
+                </div>
+            </div>
+        );
+    }
+
+    renderMapLegend(gameEngine) {
+        const mapScopeClass = getMapScopeClass(gameEngine.map_name);
+        const powers = Object.keys(gameEngine.powers);
+        powers.sort();
+        if (!powers.length)
+            return '';
+        return (
+            <div className={`map-legend ${mapScopeClass}`}>
+                <div className={'map-legend-title'}>Powers</div>
+                {powers.map(powerName => (
+                    <div className={'map-legend-item'} key={powerName}>
+                        <span className={'map-legend-swatch'}
+                              style={{backgroundColor: `var(--power-${powerName.toLowerCase()})`}}/>
+                        <span className={'map-legend-label'}>{powerName}</span>
+                    </div>
+                ))}
             </div>
         );
     }
