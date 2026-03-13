@@ -117,7 +117,7 @@ export class ContentGames extends React.Component {
     }
 
     render() {
-        const title = 'Games';
+        const title = 'Games List';
         const page = this.getPage();
         const navigation = [
             ['load a game from disk', page.loadGameFromDisk],
