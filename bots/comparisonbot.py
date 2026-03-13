@@ -19,13 +19,13 @@ from bots.instrumentation import init_langfuse_tracing
 from bots.utils.crew_output import extract_orders, serialize_for_trace
 
 POWER_TO_CREW = {
-    "AUSTRIA": CREW_TACTICAL,
+    "AUSTRIA": NOCREW_RANDOM,
     "ENGLAND": NOCREW_RANDOM,
     "GERMANY": NOCREW_RANDOM,
-    "RUSSIA": NOCREW_RANDOM,
+    "RUSSIA": CREW_TACTICAL,
     "TURKEY": NOCREW_RANDOM,
     "ITALY": NOCREW_RANDOM,
-    "FRANCE": CREW_PICK_BEST,
+    "FRANCE": NOCREW_RANDOM,
 }
 
 MAX_VALIDATION_RETRIES = 2

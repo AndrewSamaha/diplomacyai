@@ -1346,6 +1346,8 @@ export class ContentGame extends React.Component {
                 <Navigation title={title}
                             afterTitle={navAfterTitle}
                             username={page.channel.username}
+                            leftActionTitle={'Back to Games'}
+                            leftAction={() => page.loadGames()}
                             navigation={navigation}/>
                 <Tabs menu={tabNames} titles={tabTitles} onChange={this.onChangeMainTab} active={mainTab}>
                     {/* Tab Phase history. */}

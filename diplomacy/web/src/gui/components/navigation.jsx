@@ -17,6 +17,7 @@
 import React from "react";
 import Octicon, {Person} from "@primer/octicons-react";
 import PropTypes from "prop-types";
+import {Button} from "./button";
 
 export class Navigation extends React.Component {
     render() {
@@ -24,6 +25,11 @@ export class Navigation extends React.Component {
         if (hasNavigation) {
             return (
                 <div className={'title row'}>
+                    <div className={'col-sm-3 align-self-center'}>
+                        {this.props.leftActionTitle && this.props.leftAction && (
+                            <Button title={this.props.leftActionTitle} onClick={this.props.leftAction}/>
+                        )}
+                    </div>
                     <div className={'col align-self-center'}>
                         <strong>{this.props.title}</strong>
                         {this.props.afterTitle ? this.props.afterTitle : ''}
@@ -74,4 +80,6 @@ Navigation.propTypes = {
     afterTitle: PropTypes.object,
     navigation: PropTypes.array,
     username: PropTypes.string,
+    leftActionTitle: PropTypes.string,
+    leftAction: PropTypes.func,
 };
