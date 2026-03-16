@@ -67,12 +67,21 @@ def test_tool_returns_full_orders_and_bundle_metadata():
     assert len(payload["recommended_orders"]) == 2
     assert isinstance(payload["bundle_score"], float)
     assert payload["beam_width"] == 16
+    assert isinstance(payload["search_duration_ms"], float)
+    assert payload["search_duration_ms"] >= 0.0
     assert "total" in payload["score_breakdown"]
     assert "n_self_bounced_moves" in payload["resolution_metadata"]
     assert "friendly_occupied_conflicts" in payload["resolution_metadata"]
     assert len(payload["candidate_bundles"]) >= 1
     assert payload["bundle_csv_path"].endswith(".csv")
     assert "resolved_orders" not in payload
+
+
+def test_tool_uses_updated_default_beam_width():
+    tool = GetTacticalOrderBundleTool(game=_Game())
+
+    payload = json.loads(tool._run(power_name="FRANCE"))
+    assert payload["beam_width"] == 64
 
 
 def test_tool_returns_error_for_bad_annotation_or_power():

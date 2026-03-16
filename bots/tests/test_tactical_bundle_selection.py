@@ -155,3 +155,24 @@ def test_select_best_order_bundle_resolves_move_into_friendly_hold():
     assert result["resolved_orders"] == ["A AAA H", "A AAB H"]
     assert result["resolution_metadata"]["n_self_bounced_moves"] == 1
     assert len(result["resolution_metadata"]["friendly_occupied_conflicts"]) == 1
+
+
+def test_select_best_order_bundle_allows_supported_attack_without_self_bounce():
+    result = select_best_order_bundle(
+        power_name="AUSTRIA",
+        possible_orders=[
+            {"location": "ACB", "orders": ["A ACB - ABC"]},
+            {"location": "ACC", "orders": ["A ACC S A ACB - ABC"]},
+        ],
+        units_by_power={"AUSTRIA": ["A ACB", "A ACC"], "FRANCE": ["A ABA"]},
+        centers_by_power={"AUSTRIA": ["ACB", "ACC"], "FRANCE": ["ABC"]},
+        loc_abut=_hex3x3_loc_abut(),
+        supply_centers=["AAA", "AAB", "AAC", "ABA", "ABB", "ABC", "ACA", "ACB", "ACC"],
+        beam_width=8,
+        include_non_moves=True,
+    )
+
+    assert result["recommended_orders"] == ["A ACB - ABC", "A ACC S A ACB - ABC"]
+    assert result["resolved_orders"] == ["A ACB - ABC", "A ACC S A ACB - ABC"]
+    assert result["resolution_metadata"]["n_self_bounced_moves"] == 0
+    assert result["resolution_metadata"]["self_conflict_groups"] == []

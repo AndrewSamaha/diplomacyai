@@ -53,7 +53,7 @@ def build_tactical_crew(tools=None) -> Crew:
             "  \"power_name\": \"{power_name}\",\n"
             "  \"annotations\": [\"...\"],\n"
             "  \"include_non_moves\": true,\n"
-            "  \"beam_width\": 32,\n"
+            "  \"beam_width\": 64,\n"
             "  \"selection_instructions\": [\"...\"],\n"
             "  \"tie_break_rules\": [\"...\"]\n"
             "}\n\n"

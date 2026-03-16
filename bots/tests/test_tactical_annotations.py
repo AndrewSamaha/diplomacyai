@@ -143,3 +143,29 @@ def test_move_ranking_is_deterministic_with_tie_break_on_order_text():
     ranks_second = {annotation["order"]: annotation["move_rank"] for annotation in moves_second}
 
     assert ranks_first == ranks_second
+
+
+def test_support_order_is_not_classified_as_move():
+    annotations = annotate_possible_orders(
+        power_name="AUSTRIA",
+        possible_orders=[
+            {"location": "ACC", "orders": ["A ACC S A ACB - ABC"]},
+        ],
+        units_by_power={
+            "AUSTRIA": ["A ACB", "A ACC"],
+            "FRANCE": ["A ABA"],
+        },
+        centers_by_power={
+            "AUSTRIA": ["ACB", "ACC"],
+            "FRANCE": ["ABC"],
+        },
+        loc_abut=_hex3x3_loc_abut(),
+    )
+
+    assert len(annotations) == 1
+    annotation = annotations[0]
+    assert annotation["order"] == "A ACC S A ACB - ABC"
+    assert annotation["is_move"] is False
+    assert annotation["destination"] is None
+    assert annotation["metrics"] is None
+    assert annotation["move_rank"] is None

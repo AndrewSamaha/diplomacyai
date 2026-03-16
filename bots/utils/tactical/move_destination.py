@@ -3,6 +3,11 @@
 
 def move_destination(order: str) -> str | None:
     """Return destination location from a move order, else None."""
-    if " - " not in order:
+    parts = str(order).upper().split()
+    if len(parts) < 4:
         return None
-    return order.rsplit(" - ", 1)[1].split()[0].upper()
+    if parts[0] not in {"A", "F"}:
+        return None
+    if parts[2] != "-":
+        return None
+    return parts[3]

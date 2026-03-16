@@ -16,6 +16,7 @@ def test_write_bundle_candidates_csv_writes_phase_file(tmp_path):
         phase="F1901M",
         power_name="AUSTRIA",
         selected_annotations=["net_score", "risk_score"],
+        search_duration_ms=12.345,
         candidate_bundles=[
             {
                 "bundle_id": "bundle_1",
@@ -49,4 +50,6 @@ def test_write_bundle_candidates_csv_writes_phase_file(tmp_path):
         rows = list(csv.DictReader(f))
     assert len(rows) == 2
     assert rows[0]["row_type"] == "bundle_summary"
+    assert rows[0]["search_duration_ms"] == "12.345"
     assert rows[1]["row_type"] == "order"
+    assert rows[1]["search_duration_ms"] == ""

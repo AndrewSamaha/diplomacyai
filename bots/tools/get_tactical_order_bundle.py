@@ -1,4 +1,5 @@
 import json
+import time
 from typing import Any, Dict, List, Optional, Type
 
 from crewai.tools import BaseTool
@@ -22,7 +23,7 @@ class TacticalOrderBundleInput(BaseModel):
         description="If true, include non-move orders in candidate bundles.",
     )
     beam_width: int = Field(
-        default=32,
+        default=64,
         ge=1,
         le=512,
         description="Beam width for deterministic bundle search.",
@@ -57,7 +58,7 @@ class GetTacticalOrderBundleTool(BaseTool):
         power_name: str,
         annotations: Optional[List[str]] = None,
         include_non_moves: bool = True,
-        beam_width: int = 32,
+        beam_width: int = 64,
     ) -> str:
         selected_annotations, error = self._selected_annotations(annotations)
         normalized_power = power_name.upper()
@@ -95,6 +96,7 @@ class GetTacticalOrderBundleTool(BaseTool):
             power.name: list(power.centers) for power in self._game.powers.values()
         }
 
+        started = time.perf_counter()
         bundle = select_best_order_bundle(
             power_name=normalized_power,
             possible_orders=possible_orders,
@@ -105,6 +107,7 @@ class GetTacticalOrderBundleTool(BaseTool):
             beam_width=beam_width,
             include_non_moves=include_non_moves,
         )
+        search_duration_ms = round((time.perf_counter() - started) * 1000, 3)
 
         phase = self._game.get_current_phase()
         game_name = (
@@ -119,6 +122,7 @@ class GetTacticalOrderBundleTool(BaseTool):
             power_name=normalized_power,
             selected_annotations=selected_annotations,
             candidate_bundles=bundle.get("candidate_bundles", []),
+            search_duration_ms=search_duration_ms,
         )
 
         return json.dumps(
@@ -129,6 +133,7 @@ class GetTacticalOrderBundleTool(BaseTool):
                 "selected_annotations": selected_annotations,
                 "available_annotations": AVAILABLE_ANNOTATIONS,
                 "beam_width": int(beam_width),
+                "search_duration_ms": search_duration_ms,
                 "recommended_orders": bundle["resolved_orders"],
                 "resolution_metadata": bundle["resolution_metadata"],
                 "bundle_score": bundle["bundle_score"],

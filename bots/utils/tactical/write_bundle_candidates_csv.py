@@ -12,6 +12,7 @@ def write_bundle_candidates_csv(
     power_name: str,
     selected_annotations: list[str],
     candidate_bundles: list[dict[str, object]],
+    search_duration_ms: float | None = None,
     logs_root: str = "logs",
 ) -> str:
     """Append bundle summary and order rows into logs/<game_name>/<phase>.csv."""
@@ -27,6 +28,7 @@ def write_bundle_candidates_csv(
         "bundle_rank",
         "bundle_id",
         "bundle_score",
+        "search_duration_ms",
         "base_total",
         "capture_bonus",
         "cohesion_bonus",
@@ -64,6 +66,7 @@ def write_bundle_candidates_csv(
                     "bundle_rank": bundle.get("bundle_rank", ""),
                     "bundle_id": bundle.get("bundle_id", ""),
                     "bundle_score": bundle.get("bundle_score", ""),
+                    "search_duration_ms": search_duration_ms if search_duration_ms is not None else "",
                     "base_total": breakdown.get("base_total", ""),
                     "capture_bonus": breakdown.get("capture_bonus", ""),
                     "cohesion_bonus": breakdown.get("cohesion_bonus", ""),
@@ -105,6 +108,7 @@ def write_bundle_candidates_csv(
                         "bundle_rank": bundle.get("bundle_rank", ""),
                         "bundle_id": bundle.get("bundle_id", ""),
                         "bundle_score": bundle.get("bundle_score", ""),
+                        "search_duration_ms": "",
                         "base_total": "",
                         "capture_bonus": "",
                         "cohesion_bonus": "",
