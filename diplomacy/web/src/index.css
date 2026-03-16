@@ -6,7 +6,7 @@
 
     --color-bg-page: #1B3866;
     --color-bg-surface: #1A3154;
-    --color-bg-surface-muted: rgb(244, 244, 245);
+    --color-bg-surface-muted: rgb(44, 44, 145);
     --color-bg-surface-subtle: rgb(248, 248, 248);
     --color-bg-interactive-hover: rgb(245, 245, 245);
     --color-bg-interactive-active: rgb(230, 230, 230);
@@ -123,6 +123,47 @@ span.dropdown-item {
 .table .thead-light th {
     background-color: var(--color-table-header-bg);
     color: var(--color-table-header-text);
+}
+
+.map-panel {
+    position: relative;
+}
+
+.map-legend {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1;
+    min-width: 10rem;
+    padding: 0.75rem;
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border-muted);
+    border-radius: 0.25rem;
+    color: var(--color-text-default);
+}
+
+.map-legend-title {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.map-legend-item {
+    display: flex;
+    align-items: center;
+}
+
+.map-legend-item + .map-legend-item {
+    margin-top: 0.35rem;
+}
+
+.map-legend-swatch {
+    display: inline-block;
+    width: 0.9rem;
+    height: 0.9rem;
+    margin-right: 0.5rem;
+    border: 1px solid var(--color-text-default);
+    border-radius: 0.15rem;
+    flex: 0 0 auto;
 }
 
 .tabs-bar.nav-tabs .nav-link {
