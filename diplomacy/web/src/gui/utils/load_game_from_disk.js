@@ -18,6 +18,92 @@ import $ from "jquery";
 import {STRINGS} from "../../diplomacy/utils/strings";
 import {Game} from "../../diplomacy/engine/game";
 
+const ENABLE_LOCAL_BUNDLE_SEARCH_LOGS = process.env.REACT_APP_ENABLE_LOCAL_BUNDLE_SEARCH_LOGS === 'true';
+
+function getValueOrEmpty(value) {
+    return value == null ? '' : `${value}`;
+}
+
+function parseCsvLine(line) {
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; ++i) {
+        const char = line[i];
+        if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+                current += '"';
+                ++i;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            values.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    values.push(current);
+    return values;
+}
+
+function parseBundleSearchCsv(csvText) {
+    const lines = csvText.split(/\r?\n/).filter(Boolean);
+    if (!lines.length)
+        return [];
+    const headers = parseCsvLine(lines[0]);
+    return lines.slice(1).map(line => {
+        const values = parseCsvLine(line);
+        const row = {};
+        headers.forEach((header, index) => {
+            row[header] = getValueOrEmpty(values[index]);
+        });
+        return row;
+    });
+}
+
+async function getBundleSearchDirectoryHandle(gameId) {
+    if (typeof window.showDirectoryPicker !== 'function')
+        return null;
+    let selectedDirectory = null;
+    try {
+        selectedDirectory = await window.showDirectoryPicker({mode: 'read'});
+    } catch (error) {
+        return null;
+    }
+    if (selectedDirectory.name === `${gameId}`)
+        return selectedDirectory;
+    try {
+        return await selectedDirectory.getDirectoryHandle(`${gameId}`);
+    } catch (error) {
+        return null;
+    }
+}
+
+async function loadBundleSearchLogs(gameId) {
+    if (!ENABLE_LOCAL_BUNDLE_SEARCH_LOGS)
+        return {};
+    const shouldLoadLogs = window.confirm(
+        `Load bundle search logs for ${gameId}? Select logs/ or logs/${gameId} in the next dialog.`
+    );
+    if (!shouldLoadLogs)
+        return {};
+    const directoryHandle = await getBundleSearchDirectoryHandle(gameId);
+    if (!directoryHandle)
+        return {};
+
+    const bundleSearchLogs = {};
+    for await (const entry of directoryHandle.values()) {
+        if (entry.kind !== 'file' || !entry.name.match(/\.csv$/i))
+            continue;
+        const file = await entry.getFile();
+        const phaseName = entry.name.replace(/\.csv$/i, '');
+        bundleSearchLogs[phaseName] = parseBundleSearchCsv(await file.text());
+    }
+    return bundleSearchLogs;
+}
+
 export function loadGameFromDisk() {
     return new Promise((onLoad, onError) => {
         const input = $(document.createElement('input'));
@@ -30,7 +116,7 @@ export function loadGameFromDisk() {
                 return;
             }
             const reader = new FileReader();
-            reader.onload = () => {
+            reader.onload = async () => {
                 const savedData = JSON.parse(reader.result);
                 const gameObject = {};
                 gameObject.game_id = `(local) ${savedData.id}`;
@@ -84,6 +170,7 @@ export function loadGameFromDisk() {
                 gameObject.deadline = 0;
                 gameObject.n_controls = 0;
                 gameObject.registration_password = '';
+                gameObject.bundle_search_logs = await loadBundleSearchLogs(savedData.id);
                 const game = new Game(gameObject);
 
                 // Set game current phase and state using latest phase found in JSON file.

@@ -15,6 +15,7 @@
 #  with this program.  If not, see <https://www.gnu.org/licenses/>.
 # ==============================================================================
 """ Server game class. """
+from diplomacy.server.bundle_search_logs import load_bundle_search_logs_for_game
 from diplomacy.engine.game import Game
 from diplomacy.engine.message import GLOBAL, Message, OBSERVER, OMNISCIENT, SYSTEM
 from diplomacy.engine.power import Power
@@ -91,7 +92,8 @@ class ServerGame(Game):
                                  state=phase_data.state,
                                  orders=phase_data.orders,
                                  results=phase_data.results,
-                                 messages=self.filter_messages(phase_data.messages, role))
+                                 messages=self.filter_messages(phase_data.messages, role),
+                                 bundle_search_logs=phase_data.bundle_search_logs)
         # Filter for power roles.
         related_power_names = self.get_related_power_names(role)
         # Filter messages.
@@ -109,7 +111,20 @@ class ServerGame(Game):
                              state=phase_data.state,
                              orders=orders,
                              messages=messages,
-                             results=phase_data.results)
+                             results=phase_data.results,
+                             bundle_search_logs=phase_data.bundle_search_logs)
+
+    def refresh_bundle_search_logs(self):
+        """Refresh bundle search logs from disk when enabled."""
+        self.bundle_search_logs = load_bundle_search_logs_for_game(self.game_id)
+
+    def get_phase_history(self, from_phase=None, to_phase=None, game_role=None):
+        self.refresh_bundle_search_logs()
+        return super(ServerGame, self).get_phase_history(from_phase, to_phase, game_role)
+
+    def get_phase_data(self):
+        self.refresh_bundle_search_logs()
+        return super(ServerGame, self).get_phase_data()
 
     def game_can_start(self):
         """ Return True if server game can start.
@@ -167,6 +182,7 @@ class ServerGame(Game):
     def as_power_game(self, power_name):
         """ Return a player game data object copy of this game for given power name. """
         for_username = self.get_power(power_name).get_controller()
+        self.refresh_bundle_search_logs()
         game = Game.from_dict(self.to_dict())
         game.error = []
         game.message_history = self.get_message_history(power_name)
@@ -187,6 +203,7 @@ class ServerGame(Game):
 
     def as_omniscient_game(self, for_username):
         """ Return an omniscient game data object copy of this game. """
+        self.refresh_bundle_search_logs()
         game = Game.from_dict(self.to_dict())
         game.message_history = self.get_message_history(strings.OMNISCIENT_TYPE)
         game.messages = self.get_messages(strings.OMNISCIENT_TYPE)
@@ -202,6 +219,7 @@ class ServerGame(Game):
 
     def as_observer_game(self, for_username):
         """ Return an observer game data object copy of this game. """
+        self.refresh_bundle_search_logs()
         game = Game.from_dict(self.to_dict())
         game.error = []
         game.message_history = self.get_message_history(strings.OBSERVER_TYPE)
@@ -498,6 +516,7 @@ class ServerGame(Game):
             return None, None, kicked_powers
 
         # Process game and retrieve previous state.
+        self.refresh_bundle_search_logs()
         previous_phase_data = super(ServerGame, self).process()
         if self.count_controlled_powers() < self.get_expected_controls_count():
             # There is no more enough controlled powers, we should stop game.

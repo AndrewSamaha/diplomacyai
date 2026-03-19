@@ -29,10 +29,12 @@
 
 """
 import argparse
+from dotenv import load_dotenv
 from diplomacy import Server
 from diplomacy.utils import constants
 
 if __name__ == '__main__':
+    load_dotenv()
     PARSER = argparse.ArgumentParser(description='Run server.')
     PARSER.add_argument('--port', '-p', type=int, default=constants.DEFAULT_PORT,
                         help='run on the given port (default: %s)' % constants.DEFAULT_PORT)

@@ -224,10 +224,12 @@ class Game(Jsonable):
                  'convoy_paths_dest', 'zobrist_hash', 'renderer', 'game_id', 'map_name', 'role', 'rules',
                  'message_history', 'state_history', 'result_history', 'status', 'timestamp_created', 'n_controls',
                  'deadline', 'registration_password', 'observer_level', 'controlled_powers', '_phase_wrapper_type',
-                 'phase_abbr', '_unit_owner_cache', 'daide_port', 'fixed_state']
+                 'phase_abbr', '_unit_owner_cache', 'daide_port', 'fixed_state', 'bundle_search_logs']
     zobrist_tables = {}
     rule_cache = ()
     model = {
+        strings.BUNDLE_SEARCH_LOGS: parsing.DefaultValueType(
+            parsing.DictType(str, parsing.SequenceType(dict)), {}),
         strings.CONTROLLED_POWERS: parsing.OptionalValueType(parsing.SequenceType(str)),
         strings.DAIDE_PORT: parsing.OptionalValueType(int),
         strings.DEADLINE: parsing.DefaultValueType(int, 300),
@@ -293,6 +295,7 @@ class Game(Jsonable):
         self.controlled_powers = None
         self.daide_port = None
         self.fixed_state = None
+        self.bundle_search_logs = {}
 
         # Caches
         self._unit_owner_cache = None               # {(unit, coast_required): owner}
@@ -705,7 +708,8 @@ class Game(Jsonable):
                               state=states[i],
                               orders=orders[i],
                               messages=messages[i],
-                              results=results[i])
+                              results=results[i],
+                              bundle_search_logs=self.bundle_search_logs.get(str(phases[i]), []))
                 for i in range(len(phases))]
 
     def get_phase_from_history(self, short_phase_name, game_role=None):
@@ -736,6 +740,7 @@ class Game(Jsonable):
         self.message_history.put(phase, game_phase_data.messages)
         self.order_history.put(phase, game_phase_data.orders)
         self.result_history.put(phase, game_phase_data.results)
+        self.bundle_search_logs[str(phase)] = deepcopy(game_phase_data.bundle_search_logs)
 
     def set_status(self, status):
         """ Set game status with given status (should be in diplomacy.utils.strings.ALL_GAME_STATUSES). """
@@ -781,12 +786,14 @@ class Game(Jsonable):
                                             state=previous_state,
                                             orders=previous_orders,
                                             messages=previous_messages,
-                                            results={})
+                                            results={},
+                                            bundle_search_logs=self.bundle_search_logs.get(str(previous_phase), []))
         current_phase_data = GamePhaseData(name=self.current_short_phase,
                                            state=self.get_state(),
                                            orders={},
                                            messages={},
-                                           results={})
+                                           results={},
+                                           bundle_search_logs=self.bundle_search_logs.get(self.current_short_phase, []))
 
         return previous_phase_data, current_phase_data
 
@@ -1465,7 +1472,8 @@ class Game(Jsonable):
                              state=previous_state,
                              orders=previous_orders,
                              messages=previous_messages,
-                             results=self.result_history[previous_phase])
+                             results=self.result_history[previous_phase],
+                             bundle_search_logs=self.bundle_search_logs.get(str(previous_phase), []))
 
     def build_caches(self):
         """ Rebuilds the various caches """
@@ -1554,7 +1562,8 @@ class Game(Jsonable):
                              state=self.get_state(),
                              orders=current_orders,
                              messages=self.messages.copy(),
-                             results={})
+                             results={},
+                             bundle_search_logs=self.bundle_search_logs.get(self.current_short_phase, []))
 
     def set_phase_data(self, phase_data, clear_history=True):
         """ Set game from phase data.
@@ -1592,6 +1601,7 @@ class Game(Jsonable):
             if power_orders is not None:
                 Game.set_orders(self, power_name, power_orders)
         self.messages = current_phase_data.messages.copy()
+        self.bundle_search_logs[current_phase_data.name] = deepcopy(current_phase_data.bundle_search_logs)
         # We ignore 'results' for current phase data.
 
     def get_state(self):
@@ -4514,5 +4524,6 @@ class Game(Jsonable):
         self.order_history.clear()
         self.result_history.clear()
         self.message_history.clear()
+        self.bundle_search_logs.clear()
         self.clear_orders()
         self.clear_vote()

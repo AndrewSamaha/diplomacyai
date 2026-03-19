@@ -1186,11 +1186,55 @@ export class ContentGame extends React.Component {
                     </div>
                     <div className={'col-xl'}>{orderView}</div>
                 </Row>
+                {this.renderBundleSearchLogs(engine)}
                 {toDisplay && <HotKey keys={['arrowleft']} onKeysCoincide={this.onDecrementPastPhase}/>}
                 {toDisplay && <HotKey keys={['arrowright']} onKeysCoincide={this.onIncrementPastPhase}/>}
                 {toDisplay && <HotKey keys={['home']} onKeysCoincide={this.displayFirstPastPhase}/>}
                 {toDisplay && <HotKey keys={['end']} onKeysCoincide={this.displayLastPastPhase}/>}
             </Tab>
+        );
+    }
+
+    renderBundleSearchLogs(engine) {
+        const phaseLogs = (engine.bundle_search_logs && engine.bundle_search_logs[engine.phase]) || [];
+        if (!phaseLogs.length)
+            return '';
+        return (
+            <div className={'table-responsive mt-4'}>
+                <table className={'table table-striped table-sm'}>
+                    <caption>{`Bundle search (${engine.phase})`}</caption>
+                    <thead className={'thead-light'}>
+                    <tr>
+                        <th>Type</th>
+                        <th>Power</th>
+                        <th>Rank</th>
+                        <th>Score</th>
+                        <th>Annotations</th>
+                        <th>Order #</th>
+                        <th>Intended Order</th>
+                        <th>Effective Order</th>
+                        <th>Result</th>
+                        <th>Search ms</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {phaseLogs.map((row, index) => (
+                        <tr key={`${row.bundle_id || 'bundle'}-${row.order_index || 'summary'}-${index}`}>
+                            <td>{row.row_type}</td>
+                            <td>{row.power_name}</td>
+                            <td>{row.bundle_rank}</td>
+                            <td>{row.bundle_score || row.total}</td>
+                            <td>{row.selected_annotations}</td>
+                            <td>{row.order_index}</td>
+                            <td>{row.intended_order}</td>
+                            <td>{row.effective_order}</td>
+                            <td>{row.order_result}</td>
+                            <td>{row.search_duration_ms}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            </div>
         );
     }
 

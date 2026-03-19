@@ -128,6 +128,7 @@ export class Game {
 
         this.note = gameData.note;
         this.builds = null;
+        this.bundle_search_logs = gameData.bundle_search_logs ? JSON.parse(JSON.stringify(gameData.bundle_search_logs)) : {};
 
         // {location => [possible orders]}
         this.possibleOrders = null;
@@ -205,6 +206,9 @@ export class Game {
         this.order_history.put(phaseData.name, phaseData.orders);
         this.result_history.put(phaseData.name, phaseData.results);
         this.message_history.put(phaseData.name, new SortedDict(phaseData.messages, parseInt));
+        this.bundle_search_logs[phaseData.name] = Object.prototype.hasOwnProperty.call(phaseData, 'bundle_search_logs')
+            ? JSON.parse(JSON.stringify(phaseData.bundle_search_logs || []))
+            : (this.bundle_search_logs[phaseData.name] || []);
     }
 
     addMessage(message) {
@@ -319,6 +323,9 @@ export class Game {
                 this.setOrders(entry[0], entry[1]);
         }
         this.messages = phaseData.messages instanceof SortedDict ? phaseData.messages : new SortedDict(phaseData.messages, parseInt);
+        this.bundle_search_logs[phaseData.name] = Object.prototype.hasOwnProperty.call(phaseData, 'bundle_search_logs')
+            ? JSON.parse(JSON.stringify(phaseData.bundle_search_logs || []))
+            : (this.bundle_search_logs[phaseData.name] || []);
     }
 
     setState(state) {
