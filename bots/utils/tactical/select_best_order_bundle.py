@@ -4,6 +4,8 @@ from bots.utils.tactical.annotate_possible_orders import annotate_possible_order
 from bots.utils.tactical.base_location import base_location
 from bots.utils.tactical.estimate_bundle_score import estimate_bundle_score
 from bots.utils.tactical.move_destination import move_destination
+from bots.utils.tactical.order_source_location import order_source_location
+from bots.utils.tactical.supported_move_order import supported_move_order
 
 
 def select_best_order_bundle(
@@ -75,12 +77,23 @@ def select_best_order_bundle(
         def partial_key(partial_orders: list[str]):
             value = 0.0
             destination_counts: dict[str, int] = {}
+            partial_order_set = {str(order).upper() for order in partial_orders}
+            assigned_sources = {
+                order_source_location(str(order))
+                for order in partial_orders
+                if order_source_location(str(order))
+            }
             for order in partial_orders:
                 value += pre_score_by_order.get(order, 0.0)
                 destination = move_destination(order)
                 if destination:
                     dst = base_location(destination)
                     destination_counts[dst] = destination_counts.get(dst, 0) + 1
+                supported_order = supported_move_order(order)
+                if supported_order:
+                    supported_source = order_source_location(supported_order)
+                    if supported_source in assigned_sources and supported_order not in partial_order_set:
+                        value -= 2.0
             penalty = sum(max(count - 1, 0) * 2.0 for count in destination_counts.values())
             return value - penalty
 

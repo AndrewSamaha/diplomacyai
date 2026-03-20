@@ -6,7 +6,9 @@ from bots.utils.tactical.build_units_by_power import build_units_by_power
 from bots.utils.tactical.centerity_scores import centerity_scores
 from bots.utils.tactical.move_destination import move_destination
 from bots.utils.tactical.neighbors_for import neighbors_for
+from bots.utils.tactical.order_source_location import order_source_location
 from bots.utils.tactical.risk_score import risk_score
+from bots.utils.tactical.supported_move_order import supported_move_destination, supported_move_order
 from bots.utils.tactical.value_score import value_score
 
 
@@ -19,7 +21,7 @@ def annotate_possible_orders(
 ) -> list[dict[str, object]]:
     """Annotate possible orders with deterministic tactical features.
 
-    Returns a list of annotations. Move orders include metrics and deterministic
+    Returns a list of annotations. Move and support-to-move orders include metrics and deterministic
     ranking (`move_rank`) using net/value/risk/order tie-breaks.
     """
     me = str(power_name).upper()
@@ -28,6 +30,11 @@ def annotate_possible_orders(
     centrality = centerity_scores(loc_abut)
 
     my_units = unit_locs.get(me, set())
+    unit_owner_by_location = {
+        location: power
+        for power, locations in unit_locs.items()
+        for location in locations
+    }
     enemy_units_by_power = {
         power: locs for power, locs in unit_locs.items() if power != me
     }
@@ -44,17 +51,83 @@ def annotate_possible_orders(
             order_text = str(order)
             destination = move_destination(order_text)
             is_move = destination is not None
+            supported_order = supported_move_order(order_text)
+            supported_destination = supported_move_destination(order_text)
+            is_support_move = supported_order is not None and supported_destination is not None
 
             base_annotation: dict[str, object] = {
                 "order": order_text,
                 "location": source,
                 "is_move": is_move,
+                "is_support_move": is_support_move,
                 "destination": destination,
+                "supported_order": supported_order,
+                "supported_destination": supported_destination,
                 "metrics": None,
                 "move_rank": None,
             }
 
-            if not is_move:
+            if not is_move and not is_support_move:
+                annotations.append(base_annotation)
+                continue
+
+            if is_support_move:
+                dst = base_location(supported_destination)
+                supporter_source = source
+                supported_source = order_source_location(supported_order) or ""
+                supported_unit_power = unit_owner_by_location.get(supported_source)
+                supported_target_power = unit_owner_by_location.get(dst)
+                dst_neighbors = neighbors_for(dst, loc_abut)
+                supporter_neighbors = neighbors_for(supporter_source, loc_abut)
+
+                target_occupied_by_enemy = 0
+                if any(dst in enemy_locs for enemy_locs in enemy_units_by_power.values()):
+                    target_occupied_by_enemy = 1
+
+                enemy_support_potential = 0
+                for enemy_locs in enemy_units_by_power.values():
+                    enemy_support_potential += len(enemy_locs & dst_neighbors)
+
+                support_cut_risk = sum(len(enemy_locs & supporter_neighbors) for enemy_locs in enemy_units_by_power.values())
+                own_units_excluding_support = {loc for loc in my_units if loc not in {supporter_source, supported_source}}
+                follow_on_support_potential = len(own_units_excluding_support & dst_neighbors)
+                supported_target_is_enemy_center = int(center_owner.get(dst) not in {None, me})
+                supports_friendly_move = int(supported_unit_power == me)
+                supports_enemy_move = int(supported_unit_power not in {None, me})
+                supports_self_move = int(supported_unit_power == me and supported_source == supporter_source)
+                supported_target_is_supply_center = int(center_owner.get(dst) is not None)
+
+                value = 0.0
+                if supports_friendly_move:
+                    value += (
+                        0.8 * float(target_occupied_by_enemy)
+                        + 0.5 * float(supported_target_is_enemy_center)
+                        + 0.15 * float(follow_on_support_potential)
+                        + 0.15 * float(supported_target_is_supply_center)
+                    )
+                risk = (
+                    0.2 * float(enemy_support_potential)
+                    + 0.15 * float(support_cut_risk)
+                    + 3.0 * float(supports_enemy_move)
+                )
+                net = value - risk
+
+                base_annotation["metrics"] = {
+                    "supported_unit_power": supported_unit_power,
+                    "supported_target_power": supported_target_power,
+                    "supports_friendly_move": supports_friendly_move,
+                    "supports_enemy_move": supports_enemy_move,
+                    "supports_self_move": supports_self_move,
+                    "supports_occupied_enemy_target": target_occupied_by_enemy,
+                    "supports_enemy_center_attack": supported_target_is_enemy_center,
+                    "supported_target_is_supply_center": supported_target_is_supply_center,
+                    "supported_attack_enemy_support_potential": enemy_support_potential,
+                    "support_cut_risk": support_cut_risk,
+                    "supported_attack_follow_on_support_potential": follow_on_support_potential,
+                    "value_score": round(value, 6),
+                    "risk_score": round(risk, 6),
+                    "net_score": round(net, 6),
+                }
                 annotations.append(base_annotation)
                 continue
 
