@@ -11,7 +11,8 @@ from spec.bundle_scoring_harness import (
 )
 
 
-GAME_PATH = Path(__file__).resolve().parents[1] / 'data' / 'games' / '3x3a.json'
+GAME_PATH = Path(__file__).resolve().parent / 'game_data' / '3x3a.json'
+TARGET_PHASE = 'F1902M'
 
 # helper fn
 def get_location(possible_orders, name):
@@ -21,21 +22,21 @@ def get_location(possible_orders, name):
 def test_list_saved_game_phases_includes_current_phase():
     phases = list_saved_game_phases(GAME_PATH)
 
-    assert 'S1903M' in phases
-    assert phases[-1] == 'S1903M'
+    assert TARGET_PHASE in phases
+    assert phases[-1] == TARGET_PHASE
 
 
 def test_load_game_at_phase_materializes_target_phase():
-    game = load_game_at_phase(GAME_PATH, 'S1903M')
+    game = load_game_at_phase(GAME_PATH, TARGET_PHASE)
 
-    assert game.get_current_phase() == 'S1903M'
+    assert game.get_current_phase() == TARGET_PHASE
     assert sorted(power.name for power in game.powers.values()) == ['AUSTRIA', 'FRANCE']
 
 
 def test_load_bundle_search_inputs_builds_real_orders():
-    inputs = load_bundle_search_inputs(GAME_PATH, 'S1903M', 'AUSTRIA')
+    inputs = load_bundle_search_inputs(GAME_PATH, TARGET_PHASE, 'AUSTRIA')
 
-    assert inputs.game.get_current_phase() == 'S1903M'
+    assert inputs.game.get_current_phase() == TARGET_PHASE
     assert inputs.power_name == 'AUSTRIA'
     assert inputs.orderable_locations
     assert inputs.possible_orders
@@ -43,14 +44,14 @@ def test_load_bundle_search_inputs_builds_real_orders():
 
 
 def test_run_bundle_search_from_saved_game_returns_candidates():
-    bundle = run_bundle_search_from_saved_game(GAME_PATH, 'S1903M', 'AUSTRIA', beam_width=8)
+    bundle = run_bundle_search_from_saved_game(GAME_PATH, TARGET_PHASE, 'AUSTRIA', beam_width=8)
 
     assert bundle['candidate_bundles']
     assert bundle['recommended_orders']
     assert bundle['resolved_orders']
 
 def test_attack_and_support_orders_exist():
-    search_inputs = load_bundle_search_inputs(GAME_PATH, 'S1903M', 'AUSTRIA')
+    search_inputs = load_bundle_search_inputs(GAME_PATH, TARGET_PHASE, 'AUSTRIA')
     possible_orders = search_inputs.possible_orders
     all_orders = set()
     for orders_dict in possible_orders:
@@ -88,7 +89,7 @@ def test_attack_and_support_orders_exist():
 
 
 def test_supported_attack_into_enemy_territory_scores_above_unsupported_attack():
-    search_inputs = load_bundle_search_inputs(GAME_PATH, 'S1903M', 'AUSTRIA')
+    search_inputs = load_bundle_search_inputs(GAME_PATH, TARGET_PHASE, 'AUSTRIA')
     annotations = annotate_possible_orders(
         power_name=search_inputs.power_name,
         possible_orders=search_inputs.possible_orders,
@@ -134,7 +135,7 @@ def test_supported_attack_into_enemy_territory_scores_above_unsupported_attack()
 
 
 def test_support_order_metrics_distinguish_friendly_from_enemy_support():
-    search_inputs = load_bundle_search_inputs(GAME_PATH, 'S1903M', 'AUSTRIA')
+    search_inputs = load_bundle_search_inputs(GAME_PATH, TARGET_PHASE, 'AUSTRIA')
     annotations = annotate_possible_orders(
         power_name=search_inputs.power_name,
         possible_orders=search_inputs.possible_orders,
@@ -158,7 +159,7 @@ def test_support_order_metrics_distinguish_friendly_from_enemy_support():
 
 
 def test_enemy_support_bundle_scores_below_friendly_supported_attack_bundle():
-    search_inputs = load_bundle_search_inputs(GAME_PATH, 'S1903M', 'AUSTRIA')
+    search_inputs = load_bundle_search_inputs(GAME_PATH, TARGET_PHASE, 'AUSTRIA')
     annotations = annotate_possible_orders(
         power_name=search_inputs.power_name,
         possible_orders=search_inputs.possible_orders,
@@ -203,14 +204,14 @@ def test_enemy_support_bundle_scores_below_friendly_supported_attack_bundle():
 
 
 def test_bundle_search_no_longer_recommends_supporting_the_enemy():
-    bundle = run_bundle_search_from_saved_game(GAME_PATH, 'S1903M', 'AUSTRIA', beam_width=64)
+    bundle = run_bundle_search_from_saved_game(GAME_PATH, TARGET_PHASE, 'AUSTRIA', beam_width=64)
 
     assert 'A ABC S A AAB - ABB' not in bundle['recommended_orders']
     assert 'A ACB S A AAB - ABB' not in bundle['recommended_orders']
 
 
 def test_dangling_friendly_support_bundle_is_penalized():
-    search_inputs = load_bundle_search_inputs(GAME_PATH, 'S1903M', 'AUSTRIA')
+    search_inputs = load_bundle_search_inputs(GAME_PATH, TARGET_PHASE, 'AUSTRIA')
     annotations = annotate_possible_orders(
         power_name=search_inputs.power_name,
         possible_orders=search_inputs.possible_orders,
@@ -245,7 +246,7 @@ def test_dangling_friendly_support_bundle_is_penalized():
 
 
 def test_bundle_search_no_longer_recommends_dangling_supports():
-    bundle = run_bundle_search_from_saved_game(GAME_PATH, 'S1903M', 'AUSTRIA', beam_width=64)
+    bundle = run_bundle_search_from_saved_game(GAME_PATH, TARGET_PHASE, 'AUSTRIA', beam_width=64)
     recommended_orders = bundle['recommended_orders']
 
     recommended_order_set = {order.upper() for order in recommended_orders}
