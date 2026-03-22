@@ -254,3 +254,73 @@ def test_bundle_search_no_longer_recommends_dangling_supports():
         supported_order = order.split(' S ', 1)[1] if ' S ' in order else None
         if supported_order and ' - ' in supported_order:
             assert supported_order.upper() in recommended_order_set
+
+def test_move_into_already_held_territory():
+    search_inputs = load_bundle_search_inputs(GAME_PATH, TARGET_PHASE, 'AUSTRIA')
+    annotations = annotate_possible_orders(
+        power_name=search_inputs.power_name,
+        possible_orders=search_inputs.possible_orders,
+        units_by_power=search_inputs.units_by_power,
+        centers_by_power=search_inputs.centers_by_power,
+        loc_abut=search_inputs.loc_abut,
+    )
+    annotation_by_order = {str(entry['order']): entry for entry in annotations}
+
+    worse_move = ['A AAC H', 'A ABC - ACC', 'A ACB H', 'A ACC H']
+    better_move = ['A ABC - ABB', 'A ACB S A ABC - ABB', 'A AAC S A ABC - ABB']
+
+    better_move_score, better_move_breakdown, _ = estimate_bundle_score(
+        power_name=search_inputs.power_name,
+        orders=better_move,
+        annotation_by_order=annotation_by_order,
+        units_by_power=search_inputs.units_by_power,
+        centers_by_power=search_inputs.centers_by_power,
+        loc_abut=search_inputs.loc_abut,
+        supply_centers=search_inputs.supply_centers,
+    )
+    worse_move_score, worse_move_breakdown, _ = estimate_bundle_score(
+        power_name=search_inputs.power_name,
+        orders=worse_move,
+        annotation_by_order=annotation_by_order,
+        units_by_power=search_inputs.units_by_power,
+        centers_by_power=search_inputs.centers_by_power,
+        loc_abut=search_inputs.loc_abut,
+        supply_centers=search_inputs.supply_centers,
+    )
+    assert better_move_score > worse_move_score
+
+def test_hand_crafted_move_vs_bundle_search():
+    search_inputs = load_bundle_search_inputs(GAME_PATH, TARGET_PHASE, 'AUSTRIA')
+    annotations = annotate_possible_orders(
+        power_name=search_inputs.power_name,
+        possible_orders=search_inputs.possible_orders,
+        units_by_power=search_inputs.units_by_power,
+        centers_by_power=search_inputs.centers_by_power,
+        loc_abut=search_inputs.loc_abut,
+    )
+    annotation_by_order = {str(entry['order']): entry for entry in annotations}
+
+    best_bundle = run_bundle_search_from_saved_game(GAME_PATH, TARGET_PHASE, 'AUSTRIA', beam_width=64)
+    bundle_search_orders = best_bundle['recommended_orders']
+
+    hand_crafted_move = ['A ABC - ABB', 'A ACB S A ABC - ABB', 'A AAC S A ABC - ABB']
+
+    bundle_move_score, bundle_move_breakdown, _ = estimate_bundle_score(
+        power_name=search_inputs.power_name,
+        orders=bundle_search_orders,
+        annotation_by_order=annotation_by_order,
+        units_by_power=search_inputs.units_by_power,
+        centers_by_power=search_inputs.centers_by_power,
+        loc_abut=search_inputs.loc_abut,
+        supply_centers=search_inputs.supply_centers,
+    )
+    hand_crafted_move_score, hand_crafted_move_breakdown, _ = estimate_bundle_score(
+        power_name=search_inputs.power_name,
+        orders=hand_crafted_move,
+        annotation_by_order=annotation_by_order,
+        units_by_power=search_inputs.units_by_power,
+        centers_by_power=search_inputs.centers_by_power,
+        loc_abut=search_inputs.loc_abut,
+        supply_centers=search_inputs.supply_centers,
+    )
+    assert bundle_move_score > hand_crafted_move_score
