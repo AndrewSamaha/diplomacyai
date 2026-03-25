@@ -6,6 +6,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from bots.utils.tactical import select_best_order_bundle
+from bots.utils.tactical.order_source_location import order_source_location
 
 
 def _hex3x3_loc_abut():
@@ -176,3 +177,38 @@ def test_select_best_order_bundle_allows_supported_attack_without_self_bounce():
     assert result["resolved_orders"] == ["A ACB - ABC", "A ACC S A ACB - ABC"]
     assert result["resolution_metadata"]["n_self_bounced_moves"] == 0
     assert result["resolution_metadata"]["self_conflict_groups"] == []
+
+
+def test_select_best_order_bundle_does_not_duplicate_semantic_bundle_by_ordering():
+    result = select_best_order_bundle(
+        power_name="AUSTRIA",
+        possible_orders=[
+            {"location": "ABC", "orders": ["A ABC - ABB", "A ABC - ACC"]},
+            {"location": "ACB", "orders": ["A ACB S A ABC - ABB", "A ACB H"]},
+            {"location": "AAC", "orders": ["A AAC S A ABC - ABB", "A AAC H"]},
+            {"location": "ACC", "orders": ["A ACC - ABC", "A ACC H"]},
+        ],
+        units_by_power={"AUSTRIA": ["A ABC", "A ACB", "A AAC", "A ACC"], "FRANCE": ["A AAB", "A ABB"]},
+        centers_by_power={"AUSTRIA": ["ABC", "ACB", "AAC", "ACC"], "FRANCE": ["AAB", "ABB"]},
+        loc_abut=_hex3x3_loc_abut(),
+        supply_centers=["AAA", "AAB", "AAC", "ABA", "ABB", "ABC", "ACA", "ACB", "ACC"],
+        beam_width=64,
+        include_non_moves=True,
+    )
+
+    expected_source_order = sorted(
+        order_source_location(order)
+        for order in result["recommended_orders"]
+        if order_source_location(order)
+    )
+    assert [
+        order_source_location(order)
+        for order in result["recommended_orders"]
+        if order_source_location(order)
+    ] == expected_source_order
+
+    normalized_candidates = [
+        tuple(sorted(bundle["intended_orders"]))
+        for bundle in result["candidate_bundles"]
+    ]
+    assert len(normalized_candidates) == len(set(normalized_candidates))
