@@ -15,6 +15,7 @@ CREW_PICK_BEST = "pick_best_orders_crew"
 CREW_EZRA = "ezra_crew"
 CREW_TACTICAL = "tactical_crew"
 NOCREW_RANDOM = "nocrew_random"
+NOCREW_HOLDONLY = "nocrew_holdonly"
 DEFAULT_CREW = CREW_RANDOM
 
 
@@ -110,4 +111,4 @@ def build_crew(
 
 
 def is_no_crew_strategy(crew_name: str) -> bool:
-    return crew_name == NOCREW_RANDOM
+    return crew_name in {NOCREW_RANDOM, NOCREW_HOLDONLY}

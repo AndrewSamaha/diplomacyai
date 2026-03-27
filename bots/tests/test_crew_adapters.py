@@ -10,6 +10,7 @@ from bots.crews.adapters import (
     CREW_RANDOM,
     CREW_TACTICAL,
     DEFAULT_CREW,
+    NOCREW_HOLDONLY,
     NOCREW_RANDOM,
     get_crew_adapter,
     is_no_crew_strategy,
@@ -41,4 +42,5 @@ def test_tactical_adapter_provides_bundle_tool():
 
 def test_no_crew_strategy_sentinel():
     assert is_no_crew_strategy(NOCREW_RANDOM) is True
+    assert is_no_crew_strategy(NOCREW_HOLDONLY) is True
     assert is_no_crew_strategy(CREW_RANDOM) is False

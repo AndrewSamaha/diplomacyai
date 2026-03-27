@@ -11,6 +11,7 @@ from bots.crews.adapters import (
     CREW_PICK_BEST,
     CREW_TACTICAL,
     DEFAULT_CREW,
+    NOCREW_HOLDONLY,
     NOCREW_RANDOM,
     build_crew,
     is_no_crew_strategy,
@@ -20,12 +21,12 @@ from bots.utils.crew_output import extract_orders, serialize_for_trace
 
 POWER_TO_CREW = {
     "AUSTRIA": CREW_TACTICAL,
-    "ENGLAND": NOCREW_RANDOM,
-    "GERMANY": NOCREW_RANDOM,
-    "RUSSIA": NOCREW_RANDOM,
-    "TURKEY": NOCREW_RANDOM,
-    "ITALY": NOCREW_RANDOM,
-    "FRANCE": CREW_PICK_BEST,
+    "ENGLAND": NOCREW_HOLDONLY,
+    "GERMANY": CREW_TACTICAL,
+    "RUSSIA": NOCREW_HOLDONLY,
+    "TURKEY": NOCREW_HOLDONLY,
+    "ITALY": NOCREW_HOLDONLY,
+    "FRANCE": CREW_TACTICAL,
 }
 
 MAX_VALIDATION_RETRIES = 2
@@ -39,7 +40,7 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
     from bots.tools.get_position_metrics import GetPositionMetricsTool
     from bots.tools.move_validation import validate_orders
     from bots.utils.game_state import get_human_controlled_powers, get_recent_messages, format_messages_for_context
-    from bots.utils.random_orders import get_random_orders
+    from bots.utils.random_orders import get_hold_only_orders, get_random_orders
 
     connection = await connect(hostname, port)
     channel = await connection.authenticate(
@@ -80,7 +81,10 @@ async def play_comparison_powers(hostname="localhost", port=8432, langfuse=None)
             crew_name = POWER_TO_CREW.get(power_name, DEFAULT_CREW)
 
             if is_no_crew_strategy(crew_name):
-                orders = get_random_orders(game, power_name)
+                if crew_name == NOCREW_HOLDONLY:
+                    orders = get_hold_only_orders(game, power_name)
+                else:
+                    orders = get_random_orders(game, power_name)
                 print(f"  {power_name} ({game.get_current_phase()} | {crew_name}): {orders}")
                 await game.set_orders(power_name=power_name, orders=orders, wait=False)
                 continue
