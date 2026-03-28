@@ -13,6 +13,7 @@
 
     --color-text-accent: #C48F3F;
     --color-text-accent-secondary: #B7C43F;
+    --color-text-light-background: #000000;
     --color-text-default: #EBF1F9;
     --color-text-inverse: white;
     --color-text-muted: #B9C7DD;
@@ -550,7 +551,7 @@ span.power-name {
 }
 
 .game-message-wrapper.other-phase {
-    color: var(--color-text-subtle);
+    color: var(--color-text-light-background);
 }
 
 .game-message-wrapper + .game-message-wrapper {
